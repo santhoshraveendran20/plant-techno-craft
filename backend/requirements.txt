@@ -1,0 +1,15 @@
+fastapi==0.159.1
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.0.55
+PyMySQL==1.2.3
+cryptography==50.0.2
+pydantic==2.14.1
+pydantic-settings==2.16.1
+PyJWT==2.15.1
+bcrypt==5.0.0
+python-multipart==0.0.32
+openpyxl==3.1.5
+reportlab==5.1.0
+httpx==0.28.1
+tzdata==2026.5
+pytest==8.4.2
