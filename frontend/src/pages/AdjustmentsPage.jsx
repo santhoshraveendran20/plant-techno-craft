@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveTable } from "@/components/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, ErrorAlert, Field, Loading, PageHeader, ProductSearch } from "@/components/common";
+import { t } from "@/i18n";
 
 const REASONS = { damage: "Damaged", loss: "Lost / theft", wastage: "Wastage / expired", correction: "Count correction", other: "Other" };
 const STATUS_VARIANT = { pending: "warning", approved: "success", rejected: "secondary" };
@@ -49,14 +50,14 @@ function AdjustmentDialog({ open, onOpenChange, initialProductId, onSaved, isOwn
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!product) return setError("Choose a product");
+    if (!product) return setError(t("Choose a product"));
     const n = Number(qty);
-    if (!(n > 0)) return setError("Enter a quantity greater than zero");
+    if (!(n > 0)) return setError(t("Enter a quantity greater than zero"));
     try {
       const r = await api.post("/api/stock/adjustments", {
         product_id: product.id, qty_change: direction === "remove" ? -n : n, reason, note: note || null,
       });
-      toast.success(r.data.status === "approved" ? "Stock adjusted" : "Sent to the owner for approval");
+      toast.success(r.data.status === "approved" ? t("Stock adjusted") : t("Sent to the owner for approval"));
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -68,22 +69,22 @@ function AdjustmentDialog({ open, onOpenChange, initialProductId, onSaved, isOwn
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Stock adjustment</DialogTitle>
+          <DialogTitle>{t("Stock adjustment")}</DialogTitle>
           <DialogDescription>
-            {isOwner ? "Applied immediately and logged." : "Staff adjustments need the owner's approval before stock changes."}
+            {isOwner ? t("Applied immediately and logged.") : t("Staff adjustments need the owner's approval before stock changes.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-3">
           <ErrorAlert message={error} />
-          <Field label="Product">
+          <Field label={t("Product")}>
             {product ? (
               <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
                 <span>
                   <span className="font-medium">{product.name}</span>
-                  <span className="block text-xs text-muted-foreground">In stock: {formatNumber(product.stock_qty)} {product.unit}</span>
+                  <span className="block text-xs text-muted-foreground">{t("In stock: {qty} {unit}", { qty: formatNumber(product.stock_qty), unit: product.unit })}</span>
                 </span>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setProduct(null)}>
-                  Change
+                  {t("Change")}
                 </Button>
               </div>
             ) : (
@@ -91,22 +92,22 @@ function AdjustmentDialog({ open, onOpenChange, initialProductId, onSaved, isOwn
             )}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Change">
+            <Field label={t("Change")}>
               <Select value={direction} onValueChange={setDirection}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="remove">Remove from stock</SelectItem>
-                  <SelectItem value="add">Add to stock</SelectItem>
+                  <SelectItem value="remove">{t("Remove from stock")}</SelectItem>
+                  <SelectItem value="add">{t("Add to stock")}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Quantity">
+            <Field label={t("Quantity")}>
               <Input type="number" min="0" step="any" value={qty} onChange={(e) => setQty(e.target.value)} required />
             </Field>
           </div>
-          <Field label="Reason">
+          <Field label={t("Reason")}>
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger>
                 <SelectValue />
@@ -114,17 +115,17 @@ function AdjustmentDialog({ open, onOpenChange, initialProductId, onSaved, isOwn
               <SelectContent>
                 {Object.entries(REASONS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>
-                    {v}
+                    {t(v)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Note">
-            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="What happened?" />
+          <Field label={t("Note")}>
+            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("What happened?")} />
           </Field>
           <DialogFooter>
-            <Button type="submit">{isOwner ? "Adjust stock" : "Request approval"}</Button>
+            <Button type="submit">{isOwner ? t("Adjust stock") : t("Request approval")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -142,7 +143,7 @@ export default function AdjustmentsPage() {
   const decide = async (a, decision) => {
     try {
       await api.post(`/api/stock/adjustments/${a.id}/${decision}`);
-      toast.success(decision === "approve" ? "Approved — stock updated" : "Rejected");
+      toast.success(decision === "approve" ? t("Approved — stock updated") : t("Rejected"));
       reload();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -152,20 +153,20 @@ export default function AdjustmentsPage() {
   return (
     <div>
       <PageHeader
-        title="Stock adjustments"
-        description="Damage, loss, wastage and count corrections — each with a reason, the person and owner approval."
+        title={t("Stock adjustments")}
+        description={t("Damage, loss, wastage and count corrections — each with a reason, the person and owner approval.")}
         actions={
           <Button onClick={() => setOpen(true)}>
-            <Plus /> New adjustment
+            <Plus /> {t("New adjustment")}
           </Button>
         }
       />
       <Tabs value={status} onValueChange={setStatus} className="mb-3">
         <TabsList>
-          <TabsTrigger value="pending">Awaiting approval</TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="pending">{t("Awaiting approval")}</TabsTrigger>
+          <TabsTrigger value="approved">{t("Approved")}</TabsTrigger>
+          <TabsTrigger value="rejected">{t("Rejected")}</TabsTrigger>
+          <TabsTrigger value="all">{t("All")}</TabsTrigger>
         </TabsList>
       </Tabs>
       <Card>
@@ -175,59 +176,59 @@ export default function AdjustmentsPage() {
         ) : (
           <ResponsiveTable
             rows={data || []}
-            empty={<EmptyState icon={SlidersHorizontal} title="No adjustments here" />}
+            empty={<EmptyState icon={SlidersHorizontal} title={t("No adjustments here")} />}
             columns={[
-              { key: "when", header: "Requested", hide: "xl", className: "whitespace-nowrap text-muted-foreground", cell: (a) => formatDateTime(a.created_at) },
+              { key: "when", header: t("Requested"), hide: "xl", className: "whitespace-nowrap text-muted-foreground", cell: (a) => formatDateTime(a.created_at) },
               {
-                key: "product", header: "Product", primary: true,
+                key: "product", header: t("Product"), primary: true,
                 cell: (a) => (
                   <>
                     <Link to={`/products/${a.product_id}`} className="font-medium hover:underline">{a.product_name}</Link>
-                    <span className="block text-xs text-muted-foreground">Now {formatNumber(a.stock_qty)} {a.unit}</span>
+                    <span className="block text-xs text-muted-foreground">{t("Now {qty} {unit}", { qty: formatNumber(a.stock_qty), unit: a.unit })}</span>
                   </>
                 ),
               },
               {
-                key: "change", header: "Change", align: "right", aside: true,
+                key: "change", header: t("Change"), align: "right", aside: true,
                 cell: (a) => (
-                  <span className={`tabular font-semibold ${a.qty_change < 0 ? "text-red-700" : "text-emerald-700"}`}>
+                  <span className={`tabular font-semibold ${a.qty_change < 0 ? "text-red-700 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"}`}>
                     {a.qty_change > 0 ? "+" : ""}
                     {formatNumber(a.qty_change)}
                   </span>
                 ),
               },
               {
-                key: "reason", header: "Reason",
+                key: "reason", header: t("Reason"),
                 cell: (a) => (
                   <>
-                    {REASONS[a.reason] || a.reason}
+                    {t(REASONS[a.reason] || a.reason)}
                     {a.note && <span className="block text-xs text-muted-foreground">{a.note}</span>}
                   </>
                 ),
               },
               {
-                key: "by", header: "By", className: "text-sm",
+                key: "by", header: t("By"), className: "text-sm",
                 cell: (a) => (
                   <>
                     {a.requested_by}
                     <span className="block text-xs text-muted-foreground xl:hidden">{formatDateTime(a.created_at)}</span>
-                    {a.approved_by && <span className="block text-xs text-muted-foreground">decided by {a.approved_by}</span>}
+                    {a.approved_by && <span className="block text-xs text-muted-foreground">{t("decided by {name}", { name: a.approved_by })}</span>}
                   </>
                 ),
               },
-              { key: "status", header: "Status", aside: true, cell: (a) => <Badge variant={STATUS_VARIANT[a.status]}>{a.status}</Badge> },
+              { key: "status", header: t("Status"), aside: true, cell: (a) => <Badge variant={STATUS_VARIANT[a.status]}>{a.status}</Badge> },
               ...(isOwner
                 ? [
                     {
-                      key: "actions", header: "Decision", actions: true, align: "right",
+                      key: "actions", header: t("Decision"), actions: true, align: "right",
                       cell: (a) =>
                         a.status === "pending" ? (
                           <div className="flex justify-end gap-1">
                             <Button size="sm" variant="success" onClick={() => decide(a, "approve")}>
-                              <Check /> Approve
+                              <Check /> {t("Approve")}
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => decide(a, "reject")}>
-                              <X /> Reject
+                              <X /> {t("Reject")}
                             </Button>
                           </div>
                         ) : null,

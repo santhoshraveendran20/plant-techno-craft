@@ -17,7 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { t } from "@/i18n";
 
 /** Filter row above a list: stacked 2-column grid on phones, one wrapping row from tablet up. */
 export const FILTER_BAR = "grid grid-cols-2 gap-2 border-b p-3 sm:flex sm:flex-wrap sm:items-center";
@@ -39,9 +41,9 @@ export function PageHeader({ title, description, actions, children }) {
 export function StatCard({ label, value, hint, icon: Icon, tone = "default", className }) {
   const toneClass = {
     default: "text-muted-foreground",
-    good: "text-emerald-600",
-    bad: "text-red-600",
-    warn: "text-amber-600",
+    good: "text-emerald-600 dark:text-emerald-400",
+    bad: "text-red-600 dark:text-red-400",
+    warn: "text-amber-600 dark:text-amber-400",
   }[tone];
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -69,7 +71,7 @@ const BILL_STATUS = {
 
 export function BillStatusBadge({ status }) {
   const s = BILL_STATUS[status] || { label: status, variant: "outline" };
-  return <Badge variant={s.variant}>{s.label}</Badge>;
+  return <Badge variant={s.variant}>{t(s.label)}</Badge>;
 }
 
 const MATCH_STATUS = {
@@ -83,7 +85,7 @@ const MATCH_STATUS = {
 
 export function MatchBadge({ status }) {
   const s = MATCH_STATUS[status] || { label: status, variant: "outline" };
-  return <Badge variant={s.variant}>{s.label}</Badge>;
+  return <Badge variant={s.variant}>{t(s.label)}</Badge>;
 }
 
 const UPI_STATUS = {
@@ -97,12 +99,12 @@ const UPI_STATUS = {
 
 export function UpiStatusBadge({ status }) {
   const s = UPI_STATUS[status] || { label: status, variant: "outline" };
-  return <Badge variant={s.variant}>{s.label}</Badge>;
+  return <Badge variant={s.variant}>{t(s.label)}</Badge>;
 }
 
 export function ModeBadge({ mode, kind }) {
-  if (kind === "refund") return <Badge variant="warning">Refund · {mode.toUpperCase()}</Badge>;
-  if (kind === "writeoff" || mode === "writeoff") return <Badge variant="secondary">Write-off</Badge>;
+  if (kind === "refund") return <Badge variant="warning">{t("Refund")} · {mode.toUpperCase()}</Badge>;
+  if (kind === "writeoff" || mode === "writeoff") return <Badge variant="secondary">{t("Write-off")}</Badge>;
   return <Badge variant={mode === "upi" ? "info" : "outline"}>{mode.toUpperCase()}</Badge>;
 }
 
@@ -119,7 +121,7 @@ export function EmptyState({ icon: Icon = Search, title, description, action, cl
   );
 }
 
-export function Loading({ label = "Loading…", className }) {
+export function Loading({ label = t("Loading…"), className }) {
   return (
     <div className={cn("flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground", className)}>
       <Loader2 className="h-4 w-4 animate-spin" /> {label}
@@ -155,7 +157,7 @@ export function Field({ label, hint, children, className, htmlFor }) {
   );
 }
 
-export function ConfirmDialog({ trigger, title, description, confirmLabel = "Confirm", variant = "default", onConfirm, disabled }) {
+export function ConfirmDialog({ trigger, title, description, confirmLabel = t("Confirm"), variant = "default", onConfirm, disabled }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild disabled={disabled}>
@@ -167,7 +169,7 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel = "Con
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
           <AlertDialogAction variant={variant} onClick={onConfirm}>
             {confirmLabel}
           </AlertDialogAction>
@@ -177,19 +179,70 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel = "Con
   );
 }
 
-export function Pagination({ page, pageSize, total, onPage }) {
+/** Page numbers to show: all of them when few, else first, last and the neighbours of the current page. */
+function pageNumbers(page, pages) {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  const shown = [...new Set([1, page - 1, page, page + 1, pages])].filter((p) => p >= 1 && p <= pages).sort((a, b) => a - b);
+  return shown.flatMap((p, i) => (i && p - shown[i - 1] > 1 ? ["…", p] : [p]));
+}
+
+/** Footer for a paged list. Pass onPageSize to add a rows-per-page picker (the bar then stays visible on one page). */
+export function Pagination({ page, pageSize, total, onPage, onPageSize, pageSizes = [10, 20, 50, 100] }) {
   const pages = Math.max(1, Math.ceil((total || 0) / pageSize));
-  if (pages <= 1) return null;
+  if (!total || (pages <= 1 && !onPageSize)) return null;
   return (
-    <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-sm text-muted-foreground">
-      <span className="tabular">
-        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
-      </span>
-      <div className="flex gap-1">
-        <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label="Previous page">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-3">
+        {onPageSize && (
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline">{t("Rows per page")}</span>
+            <Select value={String(pageSize)} onValueChange={(v) => onPageSize(Number(v))}>
+              <SelectTrigger className="h-8 w-[72px]" aria-label={t("Rows per page")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizes.map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <span className="tabular">
+          {t("{from}–{to} of {total}", { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, total), total })}
+        </span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => onPage(page - 1)} aria-label={t("Previous page")}>
           <ChevronLeft />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label="Next page">
+        <span className="tabular px-2 sm:hidden">
+          {page} / {pages}
+        </span>
+        <div className="hidden items-center gap-1 sm:flex">
+          {pageNumbers(page, pages).map((p, i) =>
+            p === "…" ? (
+              <span key={`gap-${i}`} className="px-1">
+                …
+              </span>
+            ) : (
+              <Button
+                key={p}
+                variant={p === page ? "default" : "ghost"}
+                size="icon"
+                className="tabular h-8 w-8"
+                onClick={() => onPage(p)}
+                aria-label={t("Page {n}", { n: p })}
+                aria-current={p === page ? "page" : undefined}
+              >
+                {p}
+              </Button>
+            )
+          )}
+        </div>
+        <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= pages} onClick={() => onPage(page + 1)} aria-label={t("Next page")}>
           <ChevronRight />
         </Button>
       </div>
@@ -249,7 +302,7 @@ export function CustomerFormDialog({ open, onOpenChange, onSaved, initial, allow
           notes: form.notes || null, vpas: form.vpa ? [form.vpa.trim()] : [],
         });
       }
-      toast.success(editing ? "Customer updated" : `Customer ${res.data.name} added`);
+      toast.success(editing ? t("Customer updated") : t("Customer {name} added", { name: res.data.name }));
       onSaved?.(res.data);
       onOpenChange(false);
     } catch (err) {
@@ -263,47 +316,47 @@ export function CustomerFormDialog({ open, onOpenChange, onSaved, initial, allow
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit customer" : "New customer"}</DialogTitle>
-          <DialogDescription>Mobile number is the unique key for each customer.</DialogDescription>
+          <DialogTitle>{editing ? t("Edit customer") : t("New customer")}</DialogTitle>
+          <DialogDescription>{t("Mobile number is the unique key for each customer.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={save} className="grid gap-3">
           <ErrorAlert message={error} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Name" htmlFor="c-name">
+            <Field label={t("Name")} htmlFor="c-name">
               <Input id="c-name" value={form.name || ""} onChange={set("name")} required autoFocus />
             </Field>
-            <Field label="Mobile" htmlFor="c-mobile">
-              <Input id="c-mobile" inputMode="tel" value={form.mobile || ""} onChange={set("mobile")} placeholder="10-digit number" required />
+            <Field label={t("Mobile")} htmlFor="c-mobile">
+              <Input id="c-mobile" inputMode="tel" value={form.mobile || ""} onChange={set("mobile")} placeholder={t("10-digit number")} required />
             </Field>
           </div>
           {!editing && (
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="UPI ID (optional)" htmlFor="c-vpa" hint="Payments from this UPI ID auto-link to the customer">
-                <Input id="c-vpa" value={form.vpa || ""} onChange={set("vpa")} placeholder="name@okaxis" />
+              <Field label={t("UPI ID (optional)")} htmlFor="c-vpa" hint={t("Payments from this UPI ID auto-link to the customer")}>
+                <Input id="c-vpa" value={form.vpa || ""} onChange={set("vpa")} placeholder={t("name@okaxis")} />
               </Field>
               {allowOpeningBalance && (
-                <Field label="Opening balance (₹)" htmlFor="c-ob" hint="Dues from the paper book">
+                <Field label={t("Opening balance (₹)")} htmlFor="c-ob" hint={t("Dues from the paper book")}>
                   <Input id="c-ob" type="number" min="0" step="0.01" value={form.opening_balance ?? ""} onChange={set("opening_balance")} />
                 </Field>
               )}
             </div>
           )}
-          <Field label="Address (optional)" htmlFor="c-addr">
+          <Field label={t("Address (optional)")} htmlFor="c-addr">
             <Input id="c-addr" value={form.address || ""} onChange={set("address")} />
           </Field>
           <label className="flex items-start gap-3 rounded-lg border p-3">
             <Switch checked={Boolean(form.whatsapp_consent)} onCheckedChange={set("whatsapp_consent")} />
             <span className="text-sm">
-              <span className="font-medium">Consent for WhatsApp / SMS</span>
-              <span className="block text-muted-foreground">Customer agreed to receive bills and due reminders (DPDP Act 2023).</span>
+              <span className="font-medium">{t("Consent for WhatsApp / SMS")}</span>
+              <span className="block text-muted-foreground">{t("Customer agreed to receive bills and due reminders (DPDP Act 2023).")}</span>
             </span>
           </label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="animate-spin" />} {editing ? "Save" : "Add customer"}
+              {saving && <Loader2 className="animate-spin" />} {editing ? t("Save") : t("Add customer")}
             </Button>
           </DialogFooter>
         </form>
@@ -337,10 +390,10 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="h-10 flex-1 justify-start gap-2 px-3 text-left font-normal">
+            <Button variant="outline" className="h-10 min-w-0 flex-1 justify-start gap-2 px-3 text-left font-normal">
               <UserRound className="text-muted-foreground" />
               {value ? (
                 <span className="min-w-0 flex-1 truncate">
@@ -348,7 +401,7 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
                   <span className="text-muted-foreground"> · {value.mobile}</span>
                 </span>
               ) : (
-                <span className="flex-1 text-muted-foreground">Walk-in customer (search to select)</span>
+                <span className="min-w-0 flex-1 truncate text-muted-foreground">{t("Walk-in customer (search to select)")}</span>
               )}
             </Button>
           </PopoverTrigger>
@@ -359,13 +412,13 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Mobile number or name…"
+                placeholder={t("Mobile number or name…")}
                 className="h-10 flex-1 bg-transparent text-sm outline-none"
               />
               {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
             <div className="max-h-72 overflow-y-auto p-1">
-              {results.length === 0 && !loading && <p className="px-3 py-6 text-center text-sm text-muted-foreground">No customers found</p>}
+              {results.length === 0 && !loading && <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t("No customers found")}</p>}
               {results.map((c) => (
                 <button
                   key={c.id}
@@ -381,8 +434,8 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
                     <span className="block truncate font-medium">{c.name}</span>
                     <span className="text-xs text-muted-foreground">{c.mobile}</span>
                   </span>
-                  {c.due > 0 && <Badge variant="destructive">Due {formatINR(c.due)}</Badge>}
-                  {c.advance > 0 && <Badge variant="success">Adv {formatINR(c.advance)}</Badge>}
+                  {c.due > 0 && <Badge variant="destructive">{t("Due {amount}", { amount: formatINR(c.due) })}</Badge>}
+                  {c.advance > 0 && <Badge variant="success">{t("Adv {amount}", { amount: formatINR(c.advance) })}</Badge>}
                 </button>
               ))}
             </div>
@@ -395,13 +448,13 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
                   setCreating(true);
                 }}
               >
-                <UserPlus className="h-4 w-4" /> Add new customer
+                <UserPlus className="h-4 w-4" /> {t("Add new customer")}
               </button>
             </div>
           </PopoverContent>
         </Popover>
         {value && (
-          <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => onChange(null)} aria-label="Remove customer">
+          <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => onChange(null)} aria-label={t("Remove customer")}>
             <X />
           </Button>
         )}
@@ -417,7 +470,7 @@ export function CustomerPicker({ value, onChange, allowOpeningBalance = false })
 }
 
 /** Product search box with keyboard support. `products` is the cached catalogue. */
-export function ProductSearch({ products, onPick, placeholder = "Search product by name…", className, autoFocus }) {
+export function ProductSearch({ products, onPick, placeholder = t("Search product by name…"), className, autoFocus }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
@@ -491,7 +544,7 @@ export function ProductSearch({ products, onPick, placeholder = "Search product 
               <span className="min-w-0">
                 <span className="block truncate font-medium">{p.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {p.barcode || "no barcode"} · stock {p.stock_qty} {p.unit}
+                  {p.barcode || t("no barcode")} · {t("stock {qty} {unit}", { qty: p.stock_qty, unit: p.unit })}
                 </span>
               </span>
               <span className="tabular font-medium">{formatINR(p.selling_price)}</span>

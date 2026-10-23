@@ -19,13 +19,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarcodeScannerDialog } from "@/components/BarcodeScanner";
 import { ResponsiveTable } from "@/components/data-table";
 import { EmptyState, ErrorAlert, Field, Loading, PageHeader, ProductSearch } from "@/components/common";
+import { t } from "@/i18n";
 
 /** Invoice lines: an editable table on tablet / desktop, one card per item on phones. */
 function PurchaseLines({ lines, update, remove }) {
   const tableMode = useIsTabletUp();
   const amount = (l) => formatINR(Number(l.qty || 0) * Number(l.cost_price || 0));
   if (!lines.length) {
-    return <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">Scan or search items to add them</p>;
+    return <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{t("Scan or search items to add them")}</p>;
   }
   if (!tableMode) {
     return (
@@ -34,21 +35,21 @@ function PurchaseLines({ lines, update, remove }) {
           <div key={l.product_id} className="rounded-md border p-3">
             <div className="mb-2 flex items-start justify-between gap-2">
               <p className="font-medium">{l.name}</p>
-              <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-8 w-8" onClick={() => remove(l.product_id)} aria-label={`Remove ${l.name}`}>
+              <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-8 w-8" onClick={() => remove(l.product_id)} aria-label={t("Remove {name}", { name: l.name })}>
                 <Trash2 />
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Qty">
+              <Field label={t("Qty")}>
                 <Input type="number" min="0" step="any" value={l.qty} onChange={(e) => update(l.product_id, "qty", e.target.value)} className="h-9" />
               </Field>
-              <Field label="Cost ₹">
+              <Field label={t("Cost ₹")}>
                 <Input type="number" min="0" step="0.01" value={l.cost_price} onChange={(e) => update(l.product_id, "cost_price", e.target.value)} className="h-9" />
               </Field>
-              <Field label="Batch">
-                <Input value={l.batch_no} onChange={(e) => update(l.product_id, "batch_no", e.target.value)} className="h-9" placeholder={l.track_expiry ? "Batch" : "—"} />
+              <Field label={t("Batch")}>
+                <Input value={l.batch_no} onChange={(e) => update(l.product_id, "batch_no", e.target.value)} className="h-9" placeholder={l.track_expiry ? t("Batch") : "—"} />
               </Field>
-              <Field label="Expiry">
+              <Field label={t("Expiry")}>
                 <Input type="date" value={l.expiry_date} onChange={(e) => update(l.product_id, "expiry_date", e.target.value)} className="h-9" />
               </Field>
             </div>
@@ -63,12 +64,12 @@ function PurchaseLines({ lines, update, remove }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead className="w-24">Qty</TableHead>
-            <TableHead className="w-28">Cost ₹</TableHead>
-            <TableHead className="w-32">Batch</TableHead>
-            <TableHead className="w-40">Expiry</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>{t("Product")}</TableHead>
+            <TableHead className="w-24">{t("Qty")}</TableHead>
+            <TableHead className="w-28">{t("Cost ₹")}</TableHead>
+            <TableHead className="w-32">{t("Batch")}</TableHead>
+            <TableHead className="w-40">{t("Expiry")}</TableHead>
+            <TableHead className="text-right">{t("Amount")}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -77,20 +78,20 @@ function PurchaseLines({ lines, update, remove }) {
             <TableRow key={l.product_id}>
               <TableCell className="font-medium">{l.name}</TableCell>
               <TableCell>
-                <Input type="number" min="0" step="any" value={l.qty} onChange={(e) => update(l.product_id, "qty", e.target.value)} className="h-8" aria-label={`Quantity of ${l.name}`} />
+                <Input type="number" min="0" step="any" value={l.qty} onChange={(e) => update(l.product_id, "qty", e.target.value)} className="h-8" aria-label={t("Quantity of {name}", { name: l.name })} />
               </TableCell>
               <TableCell>
-                <Input type="number" min="0" step="0.01" value={l.cost_price} onChange={(e) => update(l.product_id, "cost_price", e.target.value)} className="h-8" aria-label={`Cost of ${l.name}`} />
+                <Input type="number" min="0" step="0.01" value={l.cost_price} onChange={(e) => update(l.product_id, "cost_price", e.target.value)} className="h-8" aria-label={t("Cost of {name}", { name: l.name })} />
               </TableCell>
               <TableCell>
-                <Input value={l.batch_no} onChange={(e) => update(l.product_id, "batch_no", e.target.value)} className="h-8" placeholder={l.track_expiry ? "Batch" : "—"} aria-label={`Batch of ${l.name}`} />
+                <Input value={l.batch_no} onChange={(e) => update(l.product_id, "batch_no", e.target.value)} className="h-8" placeholder={l.track_expiry ? t("Batch") : "—"} aria-label={t("Batch of {name}", { name: l.name })} />
               </TableCell>
               <TableCell>
-                <Input type="date" value={l.expiry_date} onChange={(e) => update(l.product_id, "expiry_date", e.target.value)} className="h-8" aria-label={`Expiry of ${l.name}`} />
+                <Input type="date" value={l.expiry_date} onChange={(e) => update(l.product_id, "expiry_date", e.target.value)} className="h-8" aria-label={t("Expiry of {name}", { name: l.name })} />
               </TableCell>
               <TableCell className="tabular text-right">{amount(l)}</TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(l.product_id)} aria-label={`Remove ${l.name}`}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(l.product_id)} aria-label={t("Remove {name}", { name: l.name })}>
                   <Trash2 />
                 </Button>
               </TableCell>
@@ -136,7 +137,7 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
     const p = (products.data || []).find((x) => x.barcode === code.trim());
     if (!p) {
       playError();
-      toast.error(`No product with barcode ${code}`);
+      toast.error(t("No product with barcode {code}", { code }));
       return;
     }
     addProduct(p);
@@ -147,9 +148,9 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
 
   const submit = async () => {
     setError(null);
-    if (!supplierId) return setError("Choose the supplier");
-    if (!invoiceNo.trim()) return setError("Enter the supplier's invoice number");
-    if (!lines.length) return setError("Add at least one item");
+    if (!supplierId) return setError(t("Choose the supplier"));
+    if (!invoiceNo.trim()) return setError(t("Enter the supplier's invoice number"));
+    if (!lines.length) return setError(t("Add at least one item"));
     setSaving(true);
     try {
       await api.post("/api/purchases", {
@@ -162,7 +163,7 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
           batch_no: l.batch_no || null, expiry_date: l.expiry_date || null,
         })),
       });
-      toast.success(`Stock-in saved: ${lines.length} items, ${formatINR(total)}`);
+      toast.success(t("Stock-in saved: {n} items, {amount}", { n: lines.length, amount: formatINR(total) }));
       onSaved();
       onOpenChange(false);
     } catch (e) {
@@ -176,14 +177,14 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>New stock-in (purchase entry)</DialogTitle>
-          <DialogDescription>Scan the items from the supplier's invoice. Stock goes up as soon as you save.</DialogDescription>
+          <DialogTitle>{t("New stock-in (purchase entry)")}</DialogTitle>
+          <DialogDescription>{t("Scan the items from the supplier's invoice. Stock goes up as soon as you save.")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Supplier">
+          <Field label={t("Supplier")}>
             <Select value={supplierId} onValueChange={setSupplierId}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose supplier" />
+                <SelectValue placeholder={t("Choose supplier")} />
               </SelectTrigger>
               <SelectContent>
                 {(suppliers.data || []).map((s) => (
@@ -194,10 +195,10 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Invoice no.">
+          <Field label={t("Invoice no.")}>
             <Input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} />
           </Field>
-          <Field label="Invoice date">
+          <Field label={t("Invoice date")}>
             <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
           </Field>
         </div>
@@ -210,8 +211,8 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
               setScan("");
             }}
           >
-            <Input value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan barcode + Enter" className="font-mono" />
-            <Button type="button" variant="outline" onClick={() => setCameraOpen(true)} aria-label="Scan with camera">
+            <Input value={scan} onChange={(e) => setScan(e.target.value)} placeholder={t("Scan barcode + Enter")} className="font-mono" />
+            <Button type="button" variant="outline" onClick={() => setCameraOpen(true)} aria-label={t("Scan with camera")}>
               <Camera />
             </Button>
           </form>
@@ -224,22 +225,22 @@ function NewPurchaseDialog({ open, onOpenChange, onSaved }) {
         />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <label className="flex items-center gap-2 text-sm">
-            <Switch checked={updateCost} onCheckedChange={setUpdateCost} /> Update product cost price to this invoice
+            <Switch checked={updateCost} onCheckedChange={setUpdateCost} /> {t("Update product cost price to this invoice")}
           </label>
           <p className="text-lg">
-            Total <span className="tabular font-semibold">{formatINR(total)}</span>
+            {t("Total")} <span className="tabular font-semibold">{formatINR(total)}</span>
           </p>
         </div>
         <ErrorAlert message={error} />
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={submit} disabled={saving}>
-            <PackagePlus /> Save stock-in
+            <PackagePlus /> {t("Save stock-in")}
           </Button>
         </DialogFooter>
-        <BarcodeScannerDialog open={cameraOpen} onOpenChange={setCameraOpen} onDetected={byBarcode} continuous title="Scan invoice items" />
+        <BarcodeScannerDialog open={cameraOpen} onOpenChange={setCameraOpen} onDetected={byBarcode} continuous title={t("Scan invoice items")} />
       </DialogContent>
     </Dialog>
   );
@@ -251,9 +252,9 @@ function PurchaseDetailDialog({ purchaseId, onOpenChange }) {
     <Dialog open={Boolean(purchaseId)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Invoice {data?.invoice_no}</DialogTitle>
+          <DialogTitle>{t("Invoice {no}", { no: data?.invoice_no ?? "" })}</DialogTitle>
           <DialogDescription>
-            {data ? `${data.supplier_name} · ${formatDate(data.invoice_date)} · ${formatINR(data.total)}` : "Loading…"}
+            {data ? `${data.supplier_name} · ${formatDate(data.invoice_date)} · ${formatINR(data.total)}` : t("Loading…")}
           </DialogDescription>
         </DialogHeader>
         {data && (
@@ -262,11 +263,11 @@ function PurchaseDetailDialog({ purchaseId, onOpenChange }) {
               rows={data.items}
               inset
               columns={[
-                { key: "product", header: "Product", primary: true, cell: (i) => <Link to={`/products/${i.product_id}`} className="font-medium hover:underline">{i.product_name}</Link> },
-                { key: "qty", header: "Qty", align: "right", className: "tabular", cell: (i) => formatNumber(i.qty) },
-                { key: "cost", header: "Cost", align: "right", className: "tabular", cell: (i) => formatINR(i.cost_price) },
-                { key: "batch", header: "Batch / expiry", className: "text-xs", cell: (i) => `${i.batch_no || "—"}${i.expiry_date ? ` · ${formatDate(i.expiry_date)}` : ""}` },
-                { key: "amount", header: "Amount", align: "right", aside: true, cell: (i) => <span className="tabular font-medium">{formatINR(i.line_total)}</span> },
+                { key: "product", header: t("Product"), primary: true, cell: (i) => <Link to={`/products/${i.product_id}`} className="font-medium hover:underline">{i.product_name}</Link> },
+                { key: "qty", header: t("Qty"), align: "right", className: "tabular", cell: (i) => formatNumber(i.qty) },
+                { key: "cost", header: t("Cost"), align: "right", className: "tabular", cell: (i) => formatINR(i.cost_price) },
+                { key: "batch", header: t("Batch / expiry"), className: "text-xs", cell: (i) => `${i.batch_no || "—"}${i.expiry_date ? ` · ${formatDate(i.expiry_date)}` : ""}` },
+                { key: "amount", header: t("Amount"), align: "right", aside: true, cell: (i) => <span className="tabular font-medium">{formatINR(i.line_total)}</span> },
               ]}
             />
           </div>
@@ -284,11 +285,11 @@ export default function PurchasesPage() {
   return (
     <div>
       <PageHeader
-        title="Stock-in"
-        description="Purchase entries from suppliers. Every line adds stock and is recorded as a stock movement."
+        title={t("Stock-in")}
+        description={t("Purchase entries from suppliers. Every line adds stock and is recorded as a stock movement.")}
         actions={
           <Button onClick={() => setCreating(true)}>
-            <Plus /> New stock-in
+            <Plus /> {t("New stock-in")}
           </Button>
         }
       />
@@ -301,9 +302,9 @@ export default function PurchasesPage() {
             rows={data}
             onRowClick={(p) => setViewing(p.id)}
             columns={[
-              { key: "date", header: "Invoice date", cell: (p) => formatDate(p.invoice_date) },
+              { key: "date", header: t("Invoice date"), cell: (p) => formatDate(p.invoice_date) },
               {
-                key: "invoice", header: "Invoice no.", primary: true,
+                key: "invoice", header: t("Invoice no."), primary: true,
                 cell: (p) => (
                   <>
                     <span className="font-medium">{p.invoice_no}</span>
@@ -312,19 +313,19 @@ export default function PurchasesPage() {
                 ),
               },
               {
-                key: "supplier", header: "Supplier", card: false,
+                key: "supplier", header: t("Supplier"), card: false,
                 cell: (p) => (
                   <Link to={`/suppliers/${p.supplier_id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
                     {p.supplier_name}
                   </Link>
                 ),
               },
-              { key: "items", header: "Items", align: "right", className: "tabular", cell: (p) => p.item_count },
-              { key: "total", header: "Total", align: "right", aside: true, cell: (p) => <span className="tabular font-semibold">{formatINR(p.total)}</span> },
+              { key: "items", header: t("Items"), align: "right", className: "tabular", cell: (p) => p.item_count },
+              { key: "total", header: t("Total"), align: "right", aside: true, cell: (p) => <span className="tabular font-semibold">{formatINR(p.total)}</span> },
             ]}
           />
         ) : (
-          <EmptyState icon={Truck} title="No purchases yet" description="Record supplier invoices to add stock." />
+          <EmptyState icon={Truck} title={t("No purchases yet")} description={t("Record supplier invoices to add stock.")} />
         )}
       </Card>
       <NewPurchaseDialog open={creating} onOpenChange={setCreating} onSaved={reload} />

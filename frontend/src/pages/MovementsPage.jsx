@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveTable } from "@/components/data-table";
 import { EmptyState, ErrorAlert, FILTER_BAR, Loading, PageHeader } from "@/components/common";
 import { MovementLink } from "@/pages/ProductDetailPage";
+import { t } from "@/i18n";
 
 const TYPES = {
   opening: "Opening", purchase: "Stock-in", sale: "Sale", return: "Return", adjustment: "Adjustment", count: "Count",
@@ -24,7 +25,7 @@ export default function MovementsPage() {
 
   return (
     <div>
-      <PageHeader title="Stock movements" description="Every change to stock: purchases in, sales out, returns, adjustments and counts." />
+      <PageHeader title={t("Stock movements")} description={t("Every change to stock: purchases in, sales out, returns, adjustments and counts.")} />
       <Card>
         <div className={FILTER_BAR}>
           <Select value={type} onValueChange={setType}>
@@ -32,7 +33,7 @@ export default function MovementsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="all">{t("All types")}</SelectItem>
               {Object.entries(TYPES).map(([k, v]) => (
                 <SelectItem key={k} value={k}>
                   {v}
@@ -40,9 +41,9 @@ export default function MovementsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full sm:w-[150px]" aria-label="From date" />
-          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full sm:w-[150px]" aria-label="To date" />
-          <span className="col-span-2 text-sm text-muted-foreground">{data ? `${data.length} movements (latest 500)` : ""}</span>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full sm:w-[150px]" aria-label={t("From date")} />
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full sm:w-[150px]" aria-label={t("To date")} />
+          <span className="col-span-2 text-sm text-muted-foreground">{data ? t("{n} movements (latest 500)", { n: data.length }) : ""}</span>
         </div>
         <ErrorAlert message={error} className="m-3" />
         {loading && !data ? (
@@ -50,11 +51,11 @@ export default function MovementsPage() {
         ) : (
           <ResponsiveTable
             rows={data || []}
-            empty={<EmptyState icon={ArrowLeftRight} title="No movements in this period" />}
+            empty={<EmptyState icon={ArrowLeftRight} title={t("No movements in this period")} />}
             columns={[
-              { key: "date", header: "Date", hide: "xl", className: "whitespace-nowrap text-muted-foreground", cell: (m) => formatDateTime(m.created_at) },
+              { key: "date", header: t("Date"), hide: "xl", className: "whitespace-nowrap text-muted-foreground", cell: (m) => formatDateTime(m.created_at) },
               {
-                key: "product", header: "Product", primary: true,
+                key: "product", header: t("Product"), primary: true,
                 cell: (m) => (
                   <>
                     <Link to={`/products/${m.product_id}`} className="font-medium hover:underline">{m.product_name}</Link>
@@ -63,7 +64,7 @@ export default function MovementsPage() {
                 ),
               },
               {
-                key: "type", header: "Type",
+                key: "type", header: t("Type"),
                 cell: (m) => (
                   <>
                     {TYPES[m.movement_type] || m.movement_type}
@@ -72,17 +73,17 @@ export default function MovementsPage() {
                 ),
               },
               {
-                key: "change", header: "In / out", align: "right", aside: true,
+                key: "change", header: t("In / out"), align: "right", aside: true,
                 cell: (m) =>
                   m.qty_in ? (
-                    <span className="tabular font-semibold text-emerald-700">+{formatNumber(m.qty_in)}</span>
+                    <span className="tabular font-semibold text-emerald-700 dark:text-emerald-400">+{formatNumber(m.qty_in)}</span>
                   ) : (
-                    <span className="tabular font-semibold text-red-700">−{formatNumber(m.qty_out)}</span>
+                    <span className="tabular font-semibold text-red-700 dark:text-red-400">−{formatNumber(m.qty_out)}</span>
                   ),
               },
-              { key: "balance", header: "Balance", align: "right", className: "tabular font-medium", cell: (m) => formatNumber(m.balance_after) },
-              { key: "ref", header: "Reference", className: "text-sm", cell: (m) => <MovementLink m={m} /> },
-              { key: "user", header: "User", hide: "xl", className: "text-sm text-muted-foreground", cell: (m) => m.user || "system" },
+              { key: "balance", header: t("Balance"), align: "right", className: "tabular font-medium", cell: (m) => formatNumber(m.balance_after) },
+              { key: "ref", header: t("Reference"), className: "text-sm", cell: (m) => <MovementLink m={m} /> },
+              { key: "user", header: t("User"), hide: "xl", className: "text-sm text-muted-foreground", cell: (m) => m.user || "system" },
             ]}
           />
         )}

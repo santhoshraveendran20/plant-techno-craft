@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ResponsiveTable } from "@/components/data-table";
 import { EmptyState, ErrorAlert, Loading, PageHeader } from "@/components/common";
+import { t } from "@/i18n";
 
 const VARIANT = { open: "info", posted: "success", cancelled: "secondary" };
 
@@ -28,11 +29,11 @@ export default function StockCountsPage() {
   return (
     <div>
       <PageHeader
-        title="Physical stock count"
-        description="Scan what is on the shelf, compare with the system count, and post the differences as adjustments."
+        title={t("Physical stock count")}
+        description={t("Scan what is on the shelf, compare with the system count, and post the differences as adjustments.")}
         actions={
           <Button onClick={start}>
-            <Plus /> Start a count
+            <Plus /> {t("Start a count")}
           </Button>
         }
       />
@@ -44,10 +45,10 @@ export default function StockCountsPage() {
           <ResponsiveTable
             rows={data || []}
             onRowClick={(c) => navigate(`/stock/counts/${c.id}`)}
-            empty={<EmptyState icon={ClipboardCheck} title="No stock counts yet" description="Target: 98% or better accuracy at the monthly count." />}
+            empty={<EmptyState icon={ClipboardCheck} title={t("No stock counts yet")} description={t("Target: 98% or better accuracy at the monthly count.")} />}
             columns={[
               {
-                key: "started", header: "Started", primary: true,
+                key: "started", header: t("Started"), primary: true,
                 cell: (c) => (
                   <>
                     <span className="font-medium">{formatDateTime(c.created_at)}</span>
@@ -55,11 +56,11 @@ export default function StockCountsPage() {
                   </>
                 ),
               },
-              { key: "note", header: "Note", card: false, cell: (c) => c.note || "—" },
-              { key: "items", header: "Items counted", align: "right", className: "tabular", cell: (c) => c.item_count },
-              { key: "mismatch", header: "Mismatches", align: "right", className: "tabular", cell: (c) => c.mismatches },
-              { key: "accuracy", header: "Accuracy", align: "right", className: "tabular", cell: (c) => (c.accuracy_pct !== null ? `${c.accuracy_pct}%` : "—") },
-              { key: "status", header: "Status", aside: true, cell: (c) => <Badge variant={VARIANT[c.status]}>{c.status}</Badge> },
+              { key: "note", header: t("Note"), card: false, cell: (c) => c.note || "—" },
+              { key: "items", header: t("Items counted"), align: "right", className: "tabular", cell: (c) => c.item_count },
+              { key: "mismatch", header: t("Mismatches"), align: "right", className: "tabular", cell: (c) => c.mismatches },
+              { key: "accuracy", header: t("Accuracy"), align: "right", className: "tabular", cell: (c) => (c.accuracy_pct !== null ? `${c.accuracy_pct}%` : "—") },
+              { key: "status", header: t("Status"), aside: true, cell: (c) => <Badge variant={VARIANT[c.status]}>{c.status}</Badge> },
             ]}
           />
         )}

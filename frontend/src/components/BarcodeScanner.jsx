@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ErrorAlert } from "@/components/common";
+import { t } from "@/i18n";
 
 const FORMATS = [
   Html5QrcodeSupportedFormats.EAN_13,
@@ -18,7 +19,7 @@ const FORMATS = [
 ];
 
 /** Phone / webcam barcode scanner (FR-02). USB scanners type into the normal scan box instead. */
-export function BarcodeScannerDialog({ open, onOpenChange, onDetected, continuous = false, title = "Scan barcode" }) {
+export function BarcodeScannerDialog({ open, onOpenChange, onDetected, continuous = false, title = t("Scan barcode") }) {
   const regionId = useRef(`scan-${Math.random().toString(36).slice(2, 10)}`).current;
   const callback = useRef(onDetected);
   const close = useRef(onOpenChange);
@@ -44,7 +45,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onDetected, continuou
       await new Promise((r) => setTimeout(r, 80)); // let the dialog mount its content
       if (cancelled || !document.getElementById(regionId)) return;
       if (!window.isSecureContext) {
-        setError("Camera needs HTTPS (or localhost). Use a USB scanner or type the code below.");
+        setError(t("Camera needs HTTPS (or localhost). Use a USB scanner or type the code below."));
         return;
       }
       try {
@@ -69,7 +70,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onDetected, continuou
         );
         if (cancelled) await scanner.stop().catch(() => {});
       } catch (e) {
-        if (!cancelled) setError(`Could not start the camera: ${e?.message || e}. Allow camera access or type the code.`);
+        if (!cancelled) setError(t("Could not start the camera: {error}. Allow camera access or type the code.", { error: e?.message || e }));
       }
     };
     start();
@@ -107,18 +108,18 @@ export function BarcodeScannerDialog({ open, onOpenChange, onDetected, continuou
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" /> {title}
           </DialogTitle>
-          <DialogDescription>Point the camera at the barcode (EAN-13, Code-128 or shop label).</DialogDescription>
+          <DialogDescription>{t("Point the camera at the barcode (EAN-13, Code-128 or shop label).")}</DialogDescription>
         </DialogHeader>
         <div id={regionId} className="min-h-[220px] overflow-hidden rounded-lg bg-black/90" />
         <ErrorAlert message={error} />
-        {continuous && last && <p className="text-sm text-muted-foreground">Last scanned: <span className="font-mono">{last}</span></p>}
+        {continuous && last && <p className="text-sm text-muted-foreground">{t("Last scanned:")} <span className="font-mono">{last}</span></p>}
         <form onSubmit={submitManual} className="flex gap-2">
           <div className="relative flex-1">
             <Keyboard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Type barcode" className="pl-9" inputMode="numeric" />
+            <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder={t("Type barcode")} className="pl-9" inputMode="numeric" />
           </div>
           <Button type="submit" variant="secondary">
-            Add
+            {t("Add")}
           </Button>
         </form>
       </DialogContent>

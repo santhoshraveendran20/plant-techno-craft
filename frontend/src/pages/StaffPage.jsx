@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ResponsiveTable } from "@/components/data-table";
 import { ErrorAlert, Field, Loading, PageHeader } from "@/components/common";
+import { t } from "@/i18n";
 
 const ROLE_HELP = {
   owner: "Everything: products, prices, staff, dues write-off, dashboard, exports, settings",
@@ -39,7 +40,7 @@ function UserDialog({ open, onOpenChange, user, onSaved }) {
       } else {
         await api.post("/api/users", form);
       }
-      toast.success("Staff account saved");
+      toast.success(t("Staff account saved"));
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -50,35 +51,35 @@ function UserDialog({ open, onOpenChange, user, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{user?.id ? `Edit ${user.username}` : "Add staff login"}</DialogTitle>
-          <DialogDescription>{ROLE_HELP[form.role || "cashier"]}</DialogDescription>
+          <DialogTitle>{user?.id ? t("Edit {name}", { name: user.username }) : t("Add staff login")}</DialogTitle>
+          <DialogDescription>{t(ROLE_HELP[form.role || "cashier"])}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-3">
           <ErrorAlert message={error} />
-          <Field label="Full name">
+          <Field label={t("Full name")}>
             <Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Username">
+            <Field label={t("Username")}>
               <Input value={form.username || ""} onChange={(e) => setForm({ ...form, username: e.target.value })} required minLength={3} disabled={Boolean(user?.id)} />
             </Field>
-            <Field label="Role">
+            <Field label={t("Role")}>
               <Select value={form.role || "cashier"} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cashier">Cashier / staff</SelectItem>
-                  <SelectItem value="owner">Owner / admin</SelectItem>
+                  <SelectItem value="cashier">{t("Cashier / staff")}</SelectItem>
+                  <SelectItem value="owner">{t("Owner / admin")}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
           </div>
-          <Field label={user?.id ? "New password (leave empty to keep)" : "Password"}>
+          <Field label={user?.id ? t("New password (leave empty to keep)") : t("Password")}>
             <Input type="password" value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} minLength={6} required={!user?.id} />
           </Field>
           <DialogFooter>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("Save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -104,11 +105,11 @@ export default function StaffPage() {
   return (
     <div>
       <PageHeader
-        title="Staff"
-        description="Staff logins with role permissions. Every edit, discount and deletion is in the audit log."
+        title={t("Staff")}
+        description={t("Staff logins with role permissions. Every edit, discount and deletion is in the audit log.")}
         actions={
           <Button onClick={() => setEditing({})}>
-            <UserPlus /> Add staff
+            <UserPlus /> {t("Add staff")}
           </Button>
         }
       />
@@ -121,7 +122,7 @@ export default function StaffPage() {
             rows={data || []}
             columns={[
               {
-                key: "name", header: "Name", primary: true,
+                key: "name", header: t("Name"), primary: true,
                 cell: (u) => (
                   <>
                     <span className="font-medium">{u.name}</span>
@@ -129,18 +130,18 @@ export default function StaffPage() {
                   </>
                 ),
               },
-              { key: "username", header: "Username", card: false, cell: (u) => <span className="font-mono text-sm">{u.username}</span> },
-              { key: "role", header: "Role", aside: true, cell: (u) => <Badge variant={u.role === "owner" ? "default" : "secondary"}>{u.role}</Badge> },
-              { key: "login", header: "Last sign-in", hide: "xl", className: "text-muted-foreground", cell: (u) => (u.last_login_at ? formatDateTime(u.last_login_at) : "Never") },
+              { key: "username", header: t("Username"), card: false, cell: (u) => <span className="font-mono text-sm">{u.username}</span> },
+              { key: "role", header: t("Role"), aside: true, cell: (u) => <Badge variant={u.role === "owner" ? "default" : "secondary"}>{t(u.role)}</Badge> },
+              { key: "login", header: t("Last sign-in"), hide: "xl", className: "text-muted-foreground", cell: (u) => (u.last_login_at ? formatDateTime(u.last_login_at) : "Never") },
               {
-                key: "active", header: "Active",
-                cell: (u) => <Switch checked={u.is_active} disabled={u.id === me?.id} onCheckedChange={(v) => toggleActive(u, v)} aria-label={`Active: ${u.username}`} />,
+                key: "active", header: t("Active"),
+                cell: (u) => <Switch checked={u.is_active} disabled={u.id === me?.id} onCheckedChange={(v) => toggleActive(u, v)} aria-label={t("Active: {name}", { name: u.username })} />,
               },
               {
-                key: "actions", header: "Edit", actions: true, align: "right",
+                key: "actions", header: t("Edit"), actions: true, align: "right",
                 cell: (u) => (
                   <Button variant="ghost" size="sm" onClick={() => setEditing(u)}>
-                    <KeyRound /> Edit / reset password
+                    <KeyRound /> {t("Edit / reset password")}
                   </Button>
                 ),
               },

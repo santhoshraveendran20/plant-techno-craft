@@ -10,8 +10,15 @@
     <meta name="description" content="Plant Technocrat — billing, UPI payments and analytics for the nursery. Growing Green Futures." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Inter has no Tamil letters; Noto Sans Tamil is only downloaded when Tamil text is on screen -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Plant Technocrat</title>
+    <script>
+      // Apply the saved theme before first paint (same key as src/context/ThemeContext.jsx)
+      try {
+        if (localStorage.getItem("upi_tracker_theme") === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -24,6 +24,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { ErrorAlert, Field } from "@/components/common";
 import { BRAND, BrandMark } from "@/components/brand";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { t } from "@/i18n";
 
 const NAV = [
   { group: "Overview", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, owner: true }] },
@@ -82,7 +85,7 @@ function NavList({ isOwner, onNavigate, collapsed = false }) {
             {collapsed ? (
               <div className="mx-3 mb-1.5 border-t" />
             ) : (
-              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">{section.group}</p>
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">{t(section.group)}</p>
             )}
             <div className="flex flex-col gap-0.5">
               {items.map((item) =>
@@ -93,21 +96,21 @@ function NavList({ isOwner, onNavigate, collapsed = false }) {
                     target="_blank"
                     rel="noreferrer"
                     onClick={onNavigate}
-                    title={collapsed ? item.label : undefined}
+                    title={collapsed ? t(item.label) : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
                       collapsed && "justify-center px-0"
                     )}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && item.label}
+                    {!collapsed && t(item.label)}
                   </a>
                 ) : (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     onClick={onNavigate}
-                    title={collapsed ? item.label : undefined}
+                    title={collapsed ? t(item.label) : undefined}
                     className={({ isActive }) =>
                       cn(
                         "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
@@ -117,7 +120,7 @@ function NavList({ isOwner, onNavigate, collapsed = false }) {
                     }
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && item.label}
+                    {!collapsed && t(item.label)}
                   </NavLink>
                 )
               )}
@@ -134,7 +137,7 @@ function Brand({ shopName, tagline, collapsed = false }) {
     <Link to="/" className={cn("flex min-w-0 items-center gap-2.5", collapsed ? "mx-auto" : "px-4")}>
       <BrandMark className={collapsed ? "h-8 w-8" : "h-10 w-10"} />
       <div className={cn("min-w-0 leading-tight", collapsed && "hidden")}>
-        <p className="truncate text-sm font-semibold text-brand-deep">{shopName || BRAND.name}</p>
+        <p className="truncate text-sm font-semibold text-brand-deep dark:text-foreground">{shopName || BRAND.name}</p>
         <p className="truncate text-[11px] font-medium uppercase tracking-wide text-brand-leaf">{tagline ?? BRAND.tagline}</p>
       </div>
     </Link>
@@ -169,7 +172,7 @@ function Notifications() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t("Notifications")}>
           <Bell />
           {data.count > 0 && (
             <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">
@@ -179,9 +182,9 @@ function Notifications() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[min(92vw,360px)] p-0">
-        <div className="border-b px-4 py-3 text-sm font-semibold">Alerts</div>
+        <div className="border-b px-4 py-3 text-sm font-semibold">{t("Alerts")}</div>
         {data.items.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">All clear — nothing needs attention.</p>
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">{t("All clear — nothing needs attention.")}</p>
         ) : (
           <ul className="max-h-96 overflow-y-auto">
             {data.items.map((n) => (
@@ -217,7 +220,7 @@ function ChangePasswordDialog({ open, onOpenChange }) {
     setSaving(true);
     try {
       await api.post("/api/auth/change-password", form);
-      toast.success("Password changed");
+      toast.success(t("Password changed"));
       onOpenChange(false);
     } catch (err) {
       setError(errorMessage(err));
@@ -229,19 +232,19 @@ function ChangePasswordDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Change password</DialogTitle>
-          <DialogDescription>Use at least 6 characters.</DialogDescription>
+          <DialogTitle>{t("Change password")}</DialogTitle>
+          <DialogDescription>{t("Use at least 6 characters.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-3">
           <ErrorAlert message={error} />
-          <Field label="Current password">
+          <Field label={t("Current password")}>
             <Input type="password" value={form.current_password} onChange={(e) => setForm({ ...form, current_password: e.target.value })} required />
           </Field>
-          <Field label="New password">
+          <Field label={t("New password")}>
             <Input type="password" minLength={6} value={form.new_password} onChange={(e) => setForm({ ...form, new_password: e.target.value })} required />
           </Field>
           <DialogFooter>
-            <Button type="submit" disabled={saving}>Update password</Button>
+            <Button type="submit" disabled={saving}>{t("Update password")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -285,8 +288,8 @@ export default function AppLayout() {
           <button
             type="button"
             onClick={toggleCollapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("Expand sidebar") : t("Collapse sidebar")}
+            title={collapsed ? t("Expand sidebar") : t("Collapse sidebar")}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -299,8 +302,8 @@ export default function AppLayout() {
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72 overflow-y-auto p-0">
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SheetDescription className="sr-only">Go to a page</SheetDescription>
+          <SheetTitle className="sr-only">{t("Navigation")}</SheetTitle>
+          <SheetDescription className="sr-only">{t("Go to a page")}</SheetDescription>
           <div className="flex h-14 items-center border-b">
             <Brand shopName={settings?.shop_name} tagline={settings?.shop_tagline} />
           </div>
@@ -310,12 +313,12 @@ export default function AppLayout() {
 
       <div className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-16" : "lg:pl-60")}>
         <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur sm:px-6">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label={t("Open menu")}>
             <Menu />
           </Button>
           <Link to="/" className="flex min-w-0 shrink items-center gap-2 lg:hidden">
             <BrandMark className="h-8 w-8" />
-            <span className="truncate text-sm font-semibold text-brand-deep md:text-base">
+            <span className="truncate text-sm font-semibold text-brand-deep dark:text-foreground md:text-base">
               {settings?.shop_name || BRAND.name}
             </span>
           </Link>
@@ -325,15 +328,17 @@ export default function AppLayout() {
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {settings?.gateway_is_mock && (
               <Badge variant="warning" className="hidden sm:inline-flex">
-                <FlaskConical className="h-3 w-3" /> Test gateway
+                <FlaskConical className="h-3 w-3" /> {t("Test gateway")}
               </Badge>
             )}
             {!online && (
               <Badge variant="destructive">
-                <WifiOff className="h-3 w-3" /> Offline — drafts are saved on this device
+                <WifiOff className="h-3 w-3" /> {t("Offline — drafts are saved on this device")}
               </Badge>
             )}
           </div>
+          <LanguageToggle />
+          <ThemeToggle />
           <Notifications />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -343,7 +348,7 @@ export default function AppLayout() {
                 </Avatar>
                 <span className="hidden text-left leading-tight sm:block">
                   <span className="block text-sm font-medium">{user?.name}</span>
-                  <span className="block text-[11px] capitalize text-muted-foreground">{user?.role}</span>
+                  <span className="block text-[11px] capitalize text-muted-foreground">{t(user?.role)}</span>
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -354,7 +359,7 @@ export default function AppLayout() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setPwOpen(true)}>
-                <KeyRound /> Change password
+                <KeyRound /> {t("Change password")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
@@ -362,7 +367,7 @@ export default function AppLayout() {
                   navigate("/login");
                 }}
               >
-                <LogOut /> Sign out
+                <LogOut /> {t("Sign out")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

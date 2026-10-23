@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ResponsiveTable } from "@/components/data-table";
 import { EmptyState, ErrorAlert, Field, Loading, PageHeader, StatCard } from "@/components/common";
+import { t } from "@/i18n";
 
 export function SupplierFormDialog({ open, onOpenChange, supplier, onSaved }) {
   const [form, setForm] = useState({});
@@ -33,7 +34,7 @@ export function SupplierFormDialog({ open, onOpenChange, supplier, onSaved }) {
       const body = { ...form, mobile: form.mobile || null, gstin: form.gstin || null, email: form.email || null, address: form.address || null };
       if (supplier?.id) await api.put(`/api/suppliers/${supplier.id}`, body);
       else await api.post("/api/suppliers", body);
-      toast.success("Supplier saved");
+      toast.success(t("Supplier saved"));
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -44,30 +45,30 @@ export function SupplierFormDialog({ open, onOpenChange, supplier, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{supplier?.id ? "Edit supplier" : "Add supplier"}</DialogTitle>
-          <DialogDescription>Contact and tax details used on purchase entries.</DialogDescription>
+          <DialogTitle>{supplier?.id ? t("Edit supplier") : t("Add supplier")}</DialogTitle>
+          <DialogDescription>{t("Contact and tax details used on purchase entries.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-3">
           <ErrorAlert message={error} />
-          <Field label="Name">
+          <Field label={t("Name")}>
             <Input value={form.name || ""} onChange={set("name")} required autoFocus />
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Mobile">
+            <Field label={t("Mobile")}>
               <Input value={form.mobile || ""} onChange={set("mobile")} />
             </Field>
-            <Field label="GSTIN">
+            <Field label={t("GSTIN")}>
               <Input value={form.gstin || ""} onChange={set("gstin")} className="uppercase" />
             </Field>
           </div>
-          <Field label="Email">
+          <Field label={t("Email")}>
             <Input type="email" value={form.email || ""} onChange={set("email")} />
           </Field>
-          <Field label="Address">
+          <Field label={t("Address")}>
             <Input value={form.address || ""} onChange={set("address")} />
           </Field>
           <DialogFooter>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("Save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -84,17 +85,17 @@ export default function SuppliersPage() {
   return (
     <div>
       <PageHeader
-        title="Suppliers"
-        description="Who supplies what, purchase history and the amount you still owe them."
+        title={t("Suppliers")}
+        description={t("Who supplies what, purchase history and the amount you still owe them.")}
         actions={
           <Button onClick={() => setEditing({})}>
-            <Plus /> Add supplier
+            <Plus /> {t("Add supplier")}
           </Button>
         }
       />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Suppliers" value={data?.length ?? "—"} />
-        <StatCard label="Total payable" value={formatINR(payable)} tone={payable > 0 ? "warn" : "good"} />
+        <StatCard label={t("Suppliers")} value={data?.length ?? "—"} />
+        <StatCard label={t("Total payable")} value={formatINR(payable)} tone={payable > 0 ? "warn" : "good"} />
       </div>
       <Card>
         <ErrorAlert message={error} className="m-3" />
@@ -106,7 +107,7 @@ export default function SuppliersPage() {
             onRowClick={(s) => navigate(`/suppliers/${s.id}`)}
             columns={[
               {
-                key: "name", header: "Supplier", primary: true,
+                key: "name", header: t("Supplier"), primary: true,
                 cell: (s) => (
                   <>
                     <span className="font-medium">{s.name}</span>
@@ -114,18 +115,18 @@ export default function SuppliersPage() {
                   </>
                 ),
               },
-              { key: "mobile", header: "Mobile", hide: "xl", card: false, cell: (s) => s.mobile || "—" },
-              { key: "gstin", header: "GSTIN", hide: "xl", card: false, cell: (s) => <span className="font-mono text-xs">{s.gstin || "—"}</span> },
-              { key: "purchased", header: "Purchased", align: "right", className: "tabular", cell: (s) => formatINR(s.purchased) },
-              { key: "paid", header: "Paid", align: "right", className: "tabular", cell: (s) => formatINR(s.paid) },
+              { key: "mobile", header: t("Mobile"), hide: "xl", card: false, cell: (s) => s.mobile || "—" },
+              { key: "gstin", header: t("GSTIN"), hide: "xl", card: false, cell: (s) => <span className="font-mono text-xs">{s.gstin || "—"}</span> },
+              { key: "purchased", header: t("Purchased"), align: "right", className: "tabular", cell: (s) => formatINR(s.purchased) },
+              { key: "paid", header: t("Paid"), align: "right", className: "tabular", cell: (s) => formatINR(s.paid) },
               {
-                key: "payable", header: "Payable", align: "right", aside: true,
-                cell: (s) => <span className={`tabular font-semibold ${s.payable > 0 ? "text-amber-700" : ""}`}>{formatINR(s.payable)}</span>,
+                key: "payable", header: t("Payable"), align: "right", aside: true,
+                cell: (s) => <span className={`tabular font-semibold ${s.payable > 0 ? "text-amber-700 dark:text-amber-400" : ""}`}>{formatINR(s.payable)}</span>,
               },
               {
-                key: "actions", header: "Edit", actions: true, align: "right",
+                key: "actions", header: t("Edit"), actions: true, align: "right",
                 cell: (s) => (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(s)} aria-label={`Edit ${s.name}`}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(s)} aria-label={t("Edit {name}", { name: s.name })}>
                     <Pencil />
                   </Button>
                 ),
@@ -133,7 +134,7 @@ export default function SuppliersPage() {
             ]}
           />
         ) : (
-          <EmptyState icon={Building2} title="No suppliers yet" />
+          <EmptyState icon={Building2} title={t("No suppliers yet")} />
         )}
       </Card>
       <SupplierFormDialog open={Boolean(editing)} onOpenChange={(o) => !o && setEditing(null)} supplier={editing} onSaved={reload} />

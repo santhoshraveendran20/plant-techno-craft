@@ -13,6 +13,7 @@ import { ResponsiveTable } from "@/components/data-table";
 import { ErrorAlert, Loading, PageHeader, StatCard } from "@/components/common";
 import { ExportButtons } from "@/pages/BillsPage";
 import { StockBadge } from "@/pages/ProductsPage";
+import { t } from "@/i18n";
 
 const CLASS = {
   fast: { label: "Fast", variant: "success", color: COLORS.series1 },
@@ -50,24 +51,24 @@ function StockTab() {
   return (
     <>
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Stock value at cost" value={formatINR(data.totals.cost_value)} />
-        <StatCard label="Value at selling price" value={formatINR(data.totals.selling_value)} />
-        <StatCard label="Potential margin" value={formatINR(data.totals.potential_margin)} tone="good" />
-        <StatCard label="Low / out of stock" value={`${data.totals.low} / ${data.totals.out}`} tone={data.totals.out ? "bad" : "default"} />
+        <StatCard label={t("Stock value at cost")} value={formatINR(data.totals.cost_value)} />
+        <StatCard label={t("Value at selling price")} value={formatINR(data.totals.selling_value)} />
+        <StatCard label={t("Potential margin")} value={formatINR(data.totals.potential_margin)} tone="good" />
+        <StatCard label={t("Low / out of stock")} value={`${data.totals.low} / ${data.totals.out}`} tone={data.totals.out ? "bad" : "default"} />
       </div>
-      <ChartCard title="Stock value by category" description="What the shelf is worth at cost and at selling price" className="mb-4">
+      <ChartCard title={t("Stock value by category")} description={t("What the shelf is worth at cost and at selling price")} className="mb-4">
         {cats.length ? (
           <GroupedBarChart
             horizontal
             height={barsHeight(cats.length, 40)}
             labels={cats.map(([c]) => c)}
             series={[
-              { label: "At cost", data: cats.map(([, v]) => Math.round(v.cost)) },
-              { label: "At selling price", data: cats.map(([, v]) => Math.round(v.sell)) },
+              { label: t("At cost"), data: cats.map(([, v]) => Math.round(v.cost)) },
+              { label: t("At selling price"), data: cats.map(([, v]) => Math.round(v.sell)) },
             ]}
           />
         ) : (
-          <ChartEmpty>No stock</ChartEmpty>
+          <ChartEmpty>{t("No stock")}</ChartEmpty>
         )}
       </ChartCard>
       <Card>
@@ -83,7 +84,7 @@ function StockTab() {
           }}
           columns={[
             {
-              key: "product", header: "Product", primary: true,
+              key: "product", header: t("Product"), primary: true,
               cell: (r) => (
                 <>
                   <Link to={`/products/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
@@ -91,12 +92,12 @@ function StockTab() {
                 </>
               ),
             },
-            { key: "stock", header: "Stock", align: "right", className: "tabular", cell: (r) => `${formatNumber(r.stock_qty)} ${r.unit}` },
-            { key: "cost", header: "Cost", align: "right", hide: "xl", className: "tabular", cell: (r) => formatINR(r.cost_price) },
-            { key: "price", header: "Price", align: "right", hide: "xl", className: "tabular", cell: (r) => formatINR(r.selling_price) },
-            { key: "cost_value", header: "Value (cost)", align: "right", className: "tabular", cell: (r) => formatINR(r.cost_value) },
-            { key: "selling_value", header: "Value (selling)", align: "right", className: "tabular", cell: (r) => formatINR(r.selling_value) },
-            { key: "status", header: "Status", aside: true, cell: (r) => <StockBadge status={r.status} /> },
+            { key: "stock", header: t("Stock"), align: "right", className: "tabular", cell: (r) => `${formatNumber(r.stock_qty)} ${r.unit}` },
+            { key: "cost", header: t("Cost"), align: "right", hide: "xl", className: "tabular", cell: (r) => formatINR(r.cost_price) },
+            { key: "price", header: t("Price"), align: "right", hide: "xl", className: "tabular", cell: (r) => formatINR(r.selling_price) },
+            { key: "cost_value", header: t("Value (cost)"), align: "right", className: "tabular", cell: (r) => formatINR(r.cost_value) },
+            { key: "selling_value", header: t("Value (selling)"), align: "right", className: "tabular", cell: (r) => formatINR(r.selling_value) },
+            { key: "status", header: t("Status"), aside: true, cell: (r) => <StockBadge status={r.status} /> },
           ]}
         />
       </Card>
@@ -113,8 +114,8 @@ function SalesTab() {
     <>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full sm:w-[150px]" aria-label="From date" />
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full sm:w-[150px]" aria-label="To date" />
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full sm:w-[150px]" aria-label={t("From date")} />
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full sm:w-[150px]" aria-label={t("To date")} />
         </div>
         <div className="flex gap-2">
           <ExportButtons kind="sales" params={{ date_from: from, date_to: to }} />
@@ -127,24 +128,24 @@ function SalesTab() {
         data && (
           <>
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Revenue" value={formatINR(data.totals.revenue)} />
-              <StatCard label="Cost of goods" value={formatINR(data.totals.cost)} />
-              <StatCard label="Gross margin" value={formatINR(data.totals.margin)} tone="good" />
-              <StatCard label="Margin %" value={`${data.totals.margin_pct}%`} />
+              <StatCard label={t("Revenue")} value={formatINR(data.totals.revenue)} />
+              <StatCard label={t("Cost of goods")} value={formatINR(data.totals.cost)} />
+              <StatCard label={t("Gross margin")} value={formatINR(data.totals.margin)} tone="good" />
+              <StatCard label={t("Margin %")} value={`${data.totals.margin_pct}%`} />
             </div>
-            <ChartCard title="Revenue and gross margin" description="Top 10 products by revenue in this period" className="mb-4">
+            <ChartCard title={t("Revenue and gross margin")} description={t("Top 10 products by revenue in this period")} className="mb-4">
               {top.length ? (
                 <GroupedBarChart
                   horizontal
                   height={barsHeight(top.length, 40)}
                   labels={top.map((r) => r.name)}
                   series={[
-                    { label: "Revenue", data: top.map((r) => r.revenue) },
-                    { label: "Gross margin", data: top.map((r) => r.margin) },
+                    { label: t("Revenue"), data: top.map((r) => r.revenue) },
+                    { label: t("Gross margin"), data: top.map((r) => r.margin) },
                   ]}
                 />
               ) : (
-                <ChartEmpty>No sales in this period</ChartEmpty>
+                <ChartEmpty>{t("No sales in this period")}</ChartEmpty>
               )}
             </ChartCard>
             <Card>
@@ -158,12 +159,12 @@ function SalesTab() {
                   margin_pct: `${data.totals.margin_pct}%`,
                 }}
                 columns={[
-                  { key: "name", header: "Product", primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
-                  { key: "qty", header: "Qty sold", align: "right", className: "tabular", cell: (r) => formatNumber(r.qty) },
-                  { key: "revenue", header: "Revenue", align: "right", aside: true, cell: (r) => <span className="tabular">{formatINR(r.revenue)}</span> },
-                  { key: "cost", header: "Cost", align: "right", hide: "xl", className: "tabular text-muted-foreground", cell: (r) => formatINR(r.cost) },
-                  { key: "margin", header: "Gross margin", align: "right", className: "tabular font-medium", cell: (r) => formatINR(r.margin) },
-                  { key: "margin_pct", header: "Margin %", align: "right", className: "tabular", cell: (r) => `${r.margin_pct}%` },
+                  { key: "name", header: t("Product"), primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
+                  { key: "qty", header: t("Qty sold"), align: "right", className: "tabular", cell: (r) => formatNumber(r.qty) },
+                  { key: "revenue", header: t("Revenue"), align: "right", aside: true, cell: (r) => <span className="tabular">{formatINR(r.revenue)}</span> },
+                  { key: "cost", header: t("Cost"), align: "right", hide: "xl", className: "tabular text-muted-foreground", cell: (r) => formatINR(r.cost) },
+                  { key: "margin", header: t("Gross margin"), align: "right", className: "tabular font-medium", cell: (r) => formatINR(r.margin) },
+                  { key: "margin_pct", header: t("Margin %"), align: "right", className: "tabular", cell: (r) => `${r.margin_pct}%` },
                 ]}
               />
             </Card>
@@ -183,21 +184,21 @@ function ClassTab() {
   return (
     <>
       <div className="mb-4 grid gap-4 md:grid-cols-2">
-        <ChartCard title="Products by movement" description="Fast = top 20% by quantity sold in 30 days">
+        <ChartCard title={t("Products by movement")} description={t("Fast = top 20% by quantity sold in 30 days")}>
           <DonutWithLegend
             wide
             height={180}
             formatValue={(v) => `${formatNumber(v)} products`}
-            centerLabel="Products"
+            centerLabel={t("Products")}
             centerValue={data.rows.length}
-            items={keys.map((k) => ({ label: CLASS[k].label, value: data.counts[k] || 0, color: CLASS[k].color }))}
+            items={keys.map((k) => ({ label: t(CLASS[k].label), value: data.counts[k] || 0, color: CLASS[k].color }))}
           />
         </ChartCard>
-        <ChartCard title="Money tied up in stock" description="Stock value at cost for each movement class">
+        <ChartCard title={t("Money tied up in stock")} description={t("Stock value at cost for each movement class")}>
           <BarChart
             height={200}
-            label="Stock value"
-            labels={keys.map((k) => CLASS[k].label)}
+            label={t("Stock value")}
+            labels={keys.map((k) => t(CLASS[k].label))}
             data={keys.map(value)}
             colors={keys.map((k) => CLASS[k].color)}
           />
@@ -207,15 +208,15 @@ function ClassTab() {
         <ResponsiveTable
           rows={data.rows}
           columns={[
-            { key: "name", header: "Product", primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
-            { key: "qty", header: "Sold (30 days)", align: "right", className: "tabular", cell: (r) => formatNumber(r.qty_30d) },
+            { key: "name", header: t("Product"), primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
+            { key: "qty", header: t("Sold (30 days)"), align: "right", className: "tabular", cell: (r) => formatNumber(r.qty_30d) },
             {
-              key: "last", header: "Last sale", className: "text-muted-foreground",
+              key: "last", header: t("Last sale"), className: "text-muted-foreground",
               cell: (r) => (r.last_sale ? `${formatDate(r.last_sale)} (${r.days_since_sale}d)` : "Never"),
             },
-            { key: "stock", header: "Stock", align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.stock_qty) },
-            { key: "value", header: "Stock value", align: "right", className: "tabular", cell: (r) => formatINR(r.stock_value) },
-            { key: "class", header: "Class", aside: true, cell: (r) => <Badge variant={CLASS[r.class]?.variant}>{CLASS[r.class]?.label}</Badge> },
+            { key: "stock", header: t("Stock"), align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.stock_qty) },
+            { key: "value", header: t("Stock value"), align: "right", className: "tabular", cell: (r) => formatINR(r.stock_value) },
+            { key: "class", header: t("Class"), aside: true, cell: (r) => <Badge variant={CLASS[r.class]?.variant}>{t(CLASS[r.class]?.label ?? r.class)}</Badge> },
           ]}
         />
       </Card>
@@ -230,12 +231,12 @@ function ReorderTab() {
   const urgent = data.filter((r) => r.days_left !== null).slice(0, 12);
   return (
     <>
-      <ChartCard title="Days of stock left" description="At the last 30 days' selling rate — lowest first" className="mb-4">
+      <ChartCard title={t("Days of stock left")} description={t("At the last 30 days' selling rate — lowest first")} className="mb-4">
         {urgent.length ? (
           <BarChart
             horizontal
             height={barsHeight(urgent.length, 26)}
-            label="Days left"
+            label={t("Days left")}
             labels={urgent.map((r) => r.name)}
             data={urgent.map((r) => r.days_left)}
             color={COLORS.series2}
@@ -243,27 +244,27 @@ function ReorderTab() {
             tooltipFormatter={(v, i) => `${v} days · order ${urgent[i].suggested_qty} ${urgent[i].unit}`}
           />
         ) : (
-          <ChartEmpty height={160}>No product is running out at the current selling rate</ChartEmpty>
+          <ChartEmpty height={160}>{t("No product is running out at the current selling rate")}</ChartEmpty>
         )}
       </ChartCard>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Suggested reorder</CardTitle>
-          <CardDescription>Enough to cover the reorder window plus the reorder level, from the last 30 days' average daily sales.</CardDescription>
+          <CardTitle className="text-base">{t("Suggested reorder")}</CardTitle>
+          <CardDescription>{t("Enough to cover the reorder window plus the reorder level, from the last 30 days' average daily sales.")}</CardDescription>
         </CardHeader>
         <CardContent className="px-0">
           <ResponsiveTable
             rows={data}
             inset
-            empty={<p className="py-8 text-center text-sm text-muted-foreground">Nothing needs reordering</p>}
+            empty={<p className="py-8 text-center text-sm text-muted-foreground">{t("Nothing needs reordering")}</p>}
             columns={[
-              { key: "name", header: "Product", primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
-              { key: "stock", header: "Stock", align: "right", className: "tabular", cell: (r) => `${formatNumber(r.stock_qty)} ${r.unit}` },
-              { key: "reorder", header: "Reorder level", align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.reorder_level) },
-              { key: "avg", header: "Avg / day", align: "right", className: "tabular", cell: (r) => r.avg_daily_sales },
-              { key: "days", header: "Days left", align: "right", className: "tabular", cell: (r) => (r.days_left === null ? "—" : r.days_left) },
-              { key: "qty", header: "Order qty", align: "right", aside: true, cell: (r) => <span className="tabular font-semibold">{r.suggested_qty}</span> },
-              { key: "cost", header: "Est. cost", align: "right", className: "tabular", cell: (r) => formatINR(r.suggested_qty * r.cost_price) },
+              { key: "name", header: t("Product"), primary: true, cell: (r) => <span className="font-medium">{r.name}</span> },
+              { key: "stock", header: t("Stock"), align: "right", className: "tabular", cell: (r) => `${formatNumber(r.stock_qty)} ${r.unit}` },
+              { key: "reorder", header: t("Reorder level"), align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.reorder_level) },
+              { key: "avg", header: t("Avg / day"), align: "right", className: "tabular", cell: (r) => r.avg_daily_sales },
+              { key: "days", header: t("Days left"), align: "right", className: "tabular", cell: (r) => (r.days_left === null ? "—" : r.days_left) },
+              { key: "qty", header: t("Order qty"), align: "right", aside: true, cell: (r) => <span className="tabular font-semibold">{r.suggested_qty}</span> },
+              { key: "cost", header: t("Est. cost"), align: "right", className: "tabular", cell: (r) => formatINR(r.suggested_qty * r.cost_price) },
             ]}
           />
         </CardContent>
@@ -281,18 +282,18 @@ function ExpiryTab() {
       <ResponsiveTable
         rows={data}
         rowKey={(r, i) => `${r.product_id}-${r.batch_no}-${i}`}
-        empty={<p className="py-8 text-center text-sm text-muted-foreground">No batches expiring soon</p>}
+        empty={<p className="py-8 text-center text-sm text-muted-foreground">{t("No batches expiring soon")}</p>}
         columns={[
-          { key: "name", header: "Product", primary: true, cell: (r) => <Link to={`/products/${r.product_id}`} className="font-medium hover:underline">{r.name}</Link> },
-          { key: "batch", header: "Batch", cell: (r) => <span className="font-mono text-xs">{r.batch_no || "—"}</span> },
-          { key: "expiry", header: "Expiry", cell: (r) => formatDate(r.expiry_date) },
-          { key: "batch_qty", header: "Batch qty", align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.batch_qty) },
-          { key: "stock", header: "In stock", align: "right", className: "tabular", cell: (r) => formatNumber(r.stock_qty) },
+          { key: "name", header: t("Product"), primary: true, cell: (r) => <Link to={`/products/${r.product_id}`} className="font-medium hover:underline">{r.name}</Link> },
+          { key: "batch", header: t("Batch"), cell: (r) => <span className="font-mono text-xs">{r.batch_no || "—"}</span> },
+          { key: "expiry", header: t("Expiry"), cell: (r) => formatDate(r.expiry_date) },
+          { key: "batch_qty", header: t("Batch qty"), align: "right", hide: "xl", className: "tabular", cell: (r) => formatNumber(r.batch_qty) },
+          { key: "stock", header: t("In stock"), align: "right", className: "tabular", cell: (r) => formatNumber(r.stock_qty) },
           {
-            key: "status", header: "Status", aside: true,
+            key: "status", header: t("Status"), aside: true,
             cell: (r) => (
               <Badge variant={r.status === "expired" ? "destructive" : "warning"}>
-                {r.status === "expired" ? `Expired ${-r.days_to_expiry}d ago` : `In ${r.days_to_expiry} days`}
+                {r.status === "expired" ? t("Expired {n}d ago", { n: -r.days_to_expiry }) : t("In {n} days", { n: r.days_to_expiry })}
               </Badge>
             ),
           },
@@ -307,14 +308,14 @@ export default function ReportsPage() {
   const tab = params.get("tab") || "stock";
   return (
     <div>
-      <PageHeader title="Reports" description="Stock value, sales and margin per product, fast / slow / dead stock, reorder and expiry." />
+      <PageHeader title={t("Reports")} description={t("Stock value, sales and margin per product, fast / slow / dead stock, reorder and expiry.")} />
       <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })}>
         <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="stock">Stock value</TabsTrigger>
-          <TabsTrigger value="sales">Sales & margin</TabsTrigger>
-          <TabsTrigger value="class">Fast / slow</TabsTrigger>
-          <TabsTrigger value="reorder">Reorder</TabsTrigger>
-          <TabsTrigger value="expiry">Expiry</TabsTrigger>
+          <TabsTrigger value="stock">{t("Stock value")}</TabsTrigger>
+          <TabsTrigger value="sales">{t("Sales & margin")}</TabsTrigger>
+          <TabsTrigger value="class">{t("Fast / slow")}</TabsTrigger>
+          <TabsTrigger value="reorder">{t("Reorder")}</TabsTrigger>
+          <TabsTrigger value="expiry">{t("Expiry")}</TabsTrigger>
         </TabsList>
         <TabsContent value="stock"><StockTab /></TabsContent>
         <TabsContent value="sales"><SalesTab /></TabsContent>

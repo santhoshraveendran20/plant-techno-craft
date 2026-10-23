@@ -1,4 +1,5 @@
 import axios from "axios";
+import { t } from "@/i18n";
 
 const TOKEN_KEY = "upi_tracker_token";
 
@@ -47,13 +48,14 @@ api.interceptors.response.use(
   }
 );
 
-export function errorMessage(error, fallback = "Something went wrong") {
+export function errorMessage(error, fallback = t("Something went wrong")) {
   if (!error) return fallback;
   if (!error.response) {
-    return error.code === "ECONNABORTED" ? "The server took too long to respond" : "Cannot reach the server. Check your connection.";
+    return error.code === "ECONNABORTED" ? t("The server took too long to respond") : t("Cannot reach the server. Check your connection.");
   }
   const detail = error.response.data?.detail;
-  if (typeof detail === "string") return detail;
+  // fixed server messages have Tamil entries; ones with names or amounts in them stay as sent
+  if (typeof detail === "string") return t(detail);
   if (Array.isArray(detail) && detail.length) {
     return detail
       .map((d) => {

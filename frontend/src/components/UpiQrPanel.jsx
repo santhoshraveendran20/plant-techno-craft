@@ -8,6 +8,7 @@ import { cn, formatINR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UpiStatusBadge } from "@/components/common";
+import { t } from "@/i18n";
 
 const LIVE = ["active", "partially_paid", "failed"];
 
@@ -18,7 +19,7 @@ export function formatCountdown(seconds) {
 
 export function UpiQr({ request, size = 220, className }) {
   if (request?.image_url) {
-    return <img src={request.image_url} alt="UPI QR code" width={size} height={size} className={cn("rounded-lg bg-white", className)} />;
+    return <img src={request.image_url} alt={t("UPI QR code")} width={size} height={size} className={cn("rounded-lg bg-white", className)} />;
   }
   if (!request?.payload) return null;
   return (
@@ -59,14 +60,16 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
       if (data.status === "paid" && !paidNotified.current) {
         paidNotified.current = true;
         playSuccess();
-        toast.success(`Payment received: ${formatINR(data.received_amount)}`, { description: data.bill_no ? `Bill ${data.bill_no} is paid` : undefined });
+        toast.success(t("Payment received: {amount}", { amount: formatINR(data.received_amount) }), {
+          description: data.bill_no ? t("Bill {bill} is paid", { bill: data.bill_no }) : undefined,
+        });
         callbacks.current.onPaid?.(data);
       } else if (data.status !== before && data.status === "failed") {
         playError();
-        toast.error("UPI payment failed", { description: data.closed_reason || "Ask the customer to retry or use a new QR" });
+        toast.error(t("UPI payment failed"), { description: data.closed_reason || t("Ask the customer to retry or use a new QR") });
       } else if (data.status !== before && data.status === "partially_paid") {
         playError();
-        toast.warning("Amount mismatch", { description: data.closed_reason });
+        toast.warning(t("Amount mismatch"), { description: data.closed_reason });
       }
     },
     []
@@ -106,7 +109,7 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
         ...extra,
       });
       apply(res.data.request);
-      if (extra.deliver_webhook === false) toast.info("Webhook dropped - the 3-second status poll will pick it up");
+      if (extra.deliver_webhook === false) toast.info(t("Webhook dropped - the 3-second status poll will pick it up"));
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -134,17 +137,17 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
     <div className={cn("flex flex-col items-center gap-4", className)}>
       <div className="flex w-full items-center justify-between gap-2">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">{req.bill_no ? `Bill ${req.bill_no}` : "Due payment"}</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{req.bill_no ? t("Bill {bill}", { bill: req.bill_no }) : t("Due payment")}</p>
           <p className="tabular text-3xl font-semibold">{formatINR(req.amount)}</p>
         </div>
         <UpiStatusBadge status={expired ? "expired" : req.status} />
       </div>
 
       {req.status === "paid" ? (
-        <div className="flex w-full flex-col items-center gap-2 rounded-xl bg-emerald-50 py-10 text-emerald-800 ring-1 ring-emerald-200">
-          <CheckCircle2 className="h-16 w-16 animate-pop-in text-emerald-600" />
-          <p className="text-lg font-semibold">Payment received</p>
-          <p className="tabular text-sm">{formatINR(req.received_amount)} confirmed by the gateway</p>
+        <div className="flex w-full flex-col items-center gap-2 rounded-xl bg-emerald-50 py-10 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-900">
+          <CheckCircle2 className="h-16 w-16 animate-pop-in text-emerald-600 dark:text-emerald-400" />
+          <p className="text-lg font-semibold">{t("Payment received")}</p>
+          <p className="tabular text-sm">{t("{amount} confirmed by the gateway", { amount: formatINR(req.received_amount) })}</p>
         </div>
       ) : (
         <div className="relative">
@@ -152,7 +155,7 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
           {(expired || ["expired", "cancelled"].includes(req.status)) && (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="rounded-md bg-background px-3 py-1 text-sm font-medium shadow">
-                {req.status === "cancelled" ? "QR cancelled" : "QR expired"}
+                {req.status === "cancelled" ? t("QR cancelled") : t("QR expired")}
               </span>
             </div>
           )}
@@ -162,23 +165,24 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
       {LIVE.includes(req.status) && !expired && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Waiting for payment · <Clock className="h-4 w-4" />
+          {t("Waiting for payment ·")} <Clock className="h-4 w-4" />
           <span className="tabular font-medium text-foreground">{formatCountdown(secondsLeft)}</span>
         </div>
       )}
       {req.status === "failed" && (
-        <p className="flex items-center gap-2 text-sm text-red-700">
-          <XCircle className="h-4 w-4" /> {req.closed_reason || "Payment failed"}. Customer can retry, or create a new QR.
+        <p className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
+          <XCircle className="h-4 w-4" /> {t("{reason}. Customer can retry, or create a new QR.", { reason: req.closed_reason || t("Payment failed") })}
         </p>
       )}
       {req.status === "partially_paid" && (
-        <p className="flex items-center gap-2 text-sm text-amber-700">
-          <AlertTriangle className="h-4 w-4" /> Received {formatINR(req.received_amount)} — {formatINR(left)} still to collect.
+        <p className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <AlertTriangle className="h-4 w-4" />{" "}
+          {t("Received {received} — {left} still to collect.", { received: formatINR(req.received_amount), left: formatINR(left) })}
         </p>
       )}
       {req.payload && LIVE.includes(req.status) && (
         <a href={req.payload} className="flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline sm:hidden">
-          <Smartphone className="h-3.5 w-3.5" /> Open in UPI app
+          <Smartphone className="h-3.5 w-3.5" /> {t("Open in UPI app")}
         </a>
       )}
 
@@ -186,12 +190,12 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
         <div className="flex flex-wrap justify-center gap-2">
           {onNewQr && (req.status !== "active" || expired) && (
             <Button size="sm" variant="outline" onClick={onNewQr} disabled={busy}>
-              <RefreshCw /> New QR
+              <RefreshCw /> {t("New QR")}
             </Button>
           )}
           {LIVE.includes(req.status) && !expired && (
             <Button size="sm" variant="ghost" onClick={cancel} disabled={busy}>
-              Cancel QR
+              {t("Cancel QR")}
             </Button>
           )}
         </div>
@@ -200,21 +204,21 @@ export function UpiQrPanel({ request: initial, onPaid, onUpdate, onNewQr, allowS
       {allowSimulate && LIVE.includes(req.status) && !expired && (
         <div className="w-full rounded-lg border border-dashed p-3">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <FlaskConical className="h-3.5 w-3.5" /> Test mode — simulate the customer's UPI app
+            <FlaskConical className="h-3.5 w-3.5" /> {t("Test mode — simulate the customer's UPI app")}
           </p>
-          <Input value={payerVpa} onChange={(e) => setPayerVpa(e.target.value)} placeholder="Payer UPI ID" className="mb-2 h-8 text-xs" />
+          <Input value={payerVpa} onChange={(e) => setPayerVpa(e.target.value)} placeholder={t("Payer UPI ID")} className="mb-2 h-8 text-xs" />
           <div className="grid grid-cols-2 gap-2">
             <Button size="sm" variant="success" disabled={busy} onClick={() => simulate("success")}>
-              Pays {formatINR(left)}
+              {t("Pays {amount}", { amount: formatINR(left) })}
             </Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => simulate("success", { amount: Math.max(1, Math.round(left * 0.5)) })}>
-              Pays less
+              {t("Pays less")}
             </Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => simulate("failed")}>
-              Payment fails
+              {t("Payment fails")}
             </Button>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => simulate("success", { deliver_webhook: false })}>
-              Webhook lost
+              {t("Webhook lost")}
             </Button>
           </div>
         </div>

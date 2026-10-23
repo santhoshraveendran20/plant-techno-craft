@@ -26,8 +26,9 @@ import { UpiQrPanel } from "@/components/UpiQrPanel";
 import {
   BillStatusBadge, CustomerFormDialog, ErrorAlert, Field, Loading, MatchBadge, ModeBadge, StatCard,
 } from "@/components/common";
+import { t } from "@/i18n";
 
-function AmountDialog({ open, onOpenChange, title, description, defaultAmount, onSubmit, children, submitLabel = "Continue" }) {
+function AmountDialog({ open, onOpenChange, title, description, defaultAmount, onSubmit, children, submitLabel = t("Continue") }) {
   const [amount, setAmount] = useState("");
   const [extra, setExtra] = useState({});
   const [busy, setBusy] = useState(false);
@@ -63,7 +64,7 @@ function AmountDialog({ open, onOpenChange, title, description, defaultAmount, o
           }}
         >
           <ErrorAlert message={error} />
-          <Field label="Amount ₹">
+          <Field label={t("Amount ₹")}>
             <Input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required autoFocus />
           </Field>
           {children?.(extra, setExtra)}
@@ -112,7 +113,7 @@ export default function CustomerDetailPage() {
     try {
       const r = await api.post(`/api/customers/${c.id}/reminders`, { channel, include_link: true });
       window.open(r.data.url, "_blank", "noopener");
-      toast.success(`${channel === "whatsapp" ? "WhatsApp" : "SMS"} reminder ready`, { description: "Send it from the window that opened." });
+      toast.success(channel === "whatsapp" ? t("WhatsApp reminder ready") : t("SMS reminder ready"), { description: t("Send it from the window that opened.") });
       reloadAll();
     } catch (e) {
       toast.error(errorMessage(e));
@@ -142,9 +143,9 @@ export default function CustomerDetailPage() {
   const copy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Link copied");
+      toast.success(t("Link copied"));
     } catch {
-      toast.error("Copy failed - select the link and copy it");
+      toast.error(t("Copy failed - select the link and copy it"));
     }
   };
 
@@ -153,69 +154,69 @@ export default function CustomerDetailPage() {
       <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <Button variant="ghost" size="sm" className="-ml-3 mb-1" onClick={() => navigate(-1)}>
-            <ArrowLeft /> Back
+            <ArrowLeft /> {t("Back")}
           </Button>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{c.name}</h1>
-            {c.whatsapp_consent ? <Badge variant="success">WhatsApp / SMS consent</Badge> : <Badge variant="secondary">No message consent</Badge>}
+            {c.whatsapp_consent ? <Badge variant="success">{t("WhatsApp / SMS consent")}</Badge> : <Badge variant="secondary">{t("No message consent")}</Badge>}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {c.mobile}
-            {c.address ? ` · ${c.address}` : ""} · customer since {formatDate(c.created_at)}
+            {c.address ? ` · ${c.address}` : ""} · {t("customer since {date}", { date: formatDate(c.created_at) })}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setDialog("pay")}>
-            <Banknote /> Receive payment
+            <Banknote /> {t("Receive payment")}
           </Button>
           <Button variant="outline" onClick={() => setDialog("qr")}>
-            <QrCode /> UPI QR
+            <QrCode /> {t("UPI QR")}
           </Button>
           <Button variant="outline" onClick={() => setDialog("link")}>
-            <Link2 /> Payment link
+            <Link2 /> {t("Payment link")}
           </Button>
           {wide ? (
             <>
               {isOwner && c.due > 0 && (
                 <>
                   <Button variant="outline" onClick={() => remind("whatsapp")} disabled={!c.whatsapp_consent}>
-                    <Send /> WhatsApp reminder
+                    <Send /> {t("WhatsApp reminder")}
                   </Button>
                   <Button variant="outline" onClick={() => remind("sms")} disabled={!c.whatsapp_consent}>
-                    <MessageSquare /> SMS
+                    <MessageSquare /> {t("SMS")}
                   </Button>
                   <Button variant="outline" onClick={() => setDialog("writeoff")}>
-                    <XCircle /> Write off
+                    <XCircle /> {t("Write off")}
                   </Button>
                 </>
               )}
               <Button variant="ghost" onClick={() => setDialog("edit")}>
-                <Pencil /> Edit
+                <Pencil /> {t("Edit")}
               </Button>
             </>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" aria-label="More actions">
-                  <MoreHorizontal /> More
+                <Button variant="outline" aria-label={t("More actions")}>
+                  <MoreHorizontal /> {t("More")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
                 {isOwner && c.due > 0 && (
                   <>
                     <DropdownMenuItem disabled={!c.whatsapp_consent} onClick={() => remind("whatsapp")}>
-                      <Send /> WhatsApp reminder
+                      <Send /> {t("WhatsApp reminder")}
                     </DropdownMenuItem>
                     <DropdownMenuItem disabled={!c.whatsapp_consent} onClick={() => remind("sms")}>
-                      <MessageSquare /> SMS reminder
+                      <MessageSquare /> {t("SMS reminder")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setDialog("writeoff")}>
-                      <XCircle /> Write off
+                      <XCircle /> {t("Write off")}
                     </DropdownMenuItem>
                   </>
                 )}
                 <DropdownMenuItem onClick={() => setDialog("edit")}>
-                  <Pencil /> Edit customer
+                  <Pencil /> {t("Edit customer")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -225,20 +226,20 @@ export default function CustomerDetailPage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label={c.advance > 0 ? "Advance" : "Amount due"}
+          label={c.advance > 0 ? t("Advance") : t("Amount due")}
           value={formatINR(c.advance > 0 ? c.advance : c.due)}
           tone={c.due > 0 ? "bad" : "good"}
-          hint={c.due > 0 ? `Oldest due ${formatDate(c.oldest_due_date)} · ${c.days_overdue} days` : c.advance > 0 ? "Used for the next credit bill" : "All settled"}
+          hint={c.due > 0 ? t("Oldest due {date} · {n} days", { date: formatDate(c.oldest_due_date), n: c.days_overdue }) : c.advance > 0 ? t("Used for the next credit bill") : t("All settled")}
         />
-        <StatCard label="Total spent" value={formatINR(c.total_spent)} hint={`${c.bill_count} bills`} />
-        <StatCard label="Last visit" value={c.last_visit ? formatDate(c.last_visit) : "—"} hint={c.opening_balance > 0 ? `Opening balance ${formatINR(c.opening_balance)}` : undefined} />
-        <StatCard label="Reminders sent" value={c.reminder_count} hint={c.last_reminder_at ? `Last ${formatDateTime(c.last_reminder_at)}` : "None yet"} />
+        <StatCard label={t("Total spent")} value={formatINR(c.total_spent)} hint={t("{n} bills", { n: c.bill_count })} />
+        <StatCard label={t("Last visit")} value={c.last_visit ? formatDate(c.last_visit) : "—"} hint={c.opening_balance > 0 ? t("Opening balance {amount}", { amount: formatINR(c.opening_balance) }) : undefined} />
+        <StatCard label={t("Reminders sent")} value={c.reminder_count} hint={c.last_reminder_at ? t("Last {date}", { date: formatDateTime(c.last_reminder_at) }) : t("None yet")} />
       </div>
 
       <Card className="mt-4">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Purchases and payments by month</CardTitle>
-          <CardDescription>Bills raised for {c.name.split(" ")[0]} vs money received (last 6 months)</CardDescription>
+          <CardTitle className="text-base">{t("Purchases and payments by month")}</CardTitle>
+          <CardDescription>{t("Bills raised for {name} vs money received (last 6 months)", { name: c.name.split(" ")[0] })}</CardDescription>
         </CardHeader>
         <CardContent>
           {bills.data && payments.data ? (
@@ -247,11 +248,11 @@ export default function CustomerDetailPage() {
               labels={months.map((m) => m.label)}
               series={[
                 {
-                  label: "Purchases",
+                  label: t("Purchases"),
                   data: sumByMonth(bills.data.filter((b) => b.bill_type === "sale" && b.completed_at), months, (b) => b.completed_at, (b) => b.total - b.returned_amount),
                 },
                 {
-                  label: "Payments",
+                  label: t("Payments"),
                   data: sumByMonth(payments.data.filter((p) => p.kind === "payment" && p.gateway_status === "success"), months, (p) => p.created_at, (p) => p.amount),
                 },
               ]}
@@ -267,10 +268,10 @@ export default function CustomerDetailPage() {
           <Tabs defaultValue="ledger">
             <CardHeader className="pb-0">
               <TabsList className="w-full sm:w-auto">
-                <TabsTrigger value="ledger">Ledger</TabsTrigger>
-                <TabsTrigger value="bills">Bills</TabsTrigger>
-                <TabsTrigger value="payments">Payments</TabsTrigger>
-                {isOwner && <TabsTrigger value="reminders">Reminders</TabsTrigger>}
+                <TabsTrigger value="ledger">{t("Ledger")}</TabsTrigger>
+                <TabsTrigger value="bills">{t("Bills")}</TabsTrigger>
+                <TabsTrigger value="payments">{t("Payments")}</TabsTrigger>
+                {isOwner && <TabsTrigger value="reminders">{t("Reminders")}</TabsTrigger>}
               </TabsList>
             </CardHeader>
             <CardContent className="px-0">
@@ -278,25 +279,25 @@ export default function CustomerDetailPage() {
                 <ResponsiveTable
                   rows={(ledger.data?.entries || []).slice().reverse().slice(0, showAllLedger ? undefined : 50)}
                   inset
-                  empty={<p className="py-8 text-center text-sm text-muted-foreground">{ledger.data ? "No ledger entries yet" : "Loading…"}</p>}
+                  empty={<p className="py-8 text-center text-sm text-muted-foreground">{ledger.data ? t("No ledger entries yet") : t("Loading…")}</p>}
                   columns={[
-                    { key: "date", header: "Date", className: "whitespace-nowrap text-muted-foreground", cell: (e) => formatDateTime(e.created_at) },
+                    { key: "date", header: t("Date"), className: "whitespace-nowrap text-muted-foreground", cell: (e) => formatDateTime(e.created_at) },
                     {
-                      key: "entry", header: "Entry", primary: true,
+                      key: "entry", header: t("Entry"), primary: true,
                       cell: (e) => (e.bill_id ? <Link to={`/bills/${e.bill_id}`} className="hover:underline">{e.description}</Link> : e.description),
                     },
-                    { key: "debit", header: "Debit", align: "right", className: "tabular", cell: (e) => (e.debit ? formatINR(e.debit) : "—") },
-                    { key: "credit", header: "Credit", align: "right", className: "tabular text-emerald-700", cell: (e) => (e.credit ? <span className="text-emerald-700">{formatINR(e.credit)}</span> : "—") },
+                    { key: "debit", header: t("Debit"), align: "right", className: "tabular", cell: (e) => (e.debit ? formatINR(e.debit) : "—") },
+                    { key: "credit", header: t("Credit"), align: "right", className: "tabular text-emerald-700 dark:text-emerald-400", cell: (e) => (e.credit ? <span className="text-emerald-700 dark:text-emerald-400">{formatINR(e.credit)}</span> : "—") },
                     {
-                      key: "balance", header: "Balance", align: "right", aside: true,
-                      cell: (e) => <span className={`tabular font-medium ${e.balance_after > 0 ? "text-red-700" : ""}`}>{formatINR(e.balance_after)}</span>,
+                      key: "balance", header: t("Balance"), align: "right", aside: true,
+                      cell: (e) => <span className={`tabular font-medium ${e.balance_after > 0 ? "text-red-700 dark:text-red-400" : ""}`}>{formatINR(e.balance_after)}</span>,
                     },
                   ]}
                 />
                 {ledger.data && ledger.data.entries.length > 50 && !showAllLedger && (
                   <div className="border-t px-5 pt-3 text-center">
                     <Button variant="ghost" size="sm" onClick={() => setShowAllLedger(true)}>
-                      Show all {ledger.data.entries.length} entries
+                      {t("Show all {n} entries", { n: ledger.data.entries.length })}
                     </Button>
                   </div>
                 )}
@@ -305,13 +306,13 @@ export default function CustomerDetailPage() {
                 <ResponsiveTable
                   rows={bills.data || []}
                   inset
-                  empty={<p className="py-8 text-center text-sm text-muted-foreground">No bills yet</p>}
+                  empty={<p className="py-8 text-center text-sm text-muted-foreground">{t("No bills yet")}</p>}
                   columns={[
-                    { key: "bill", header: "Bill", primary: true, cell: (b) => <Link to={`/bills/${b.id}`} className="font-medium hover:underline">{b.bill_no}</Link> },
-                    { key: "date", header: "Date", className: "text-muted-foreground", cell: (b) => formatDateTime(b.completed_at || b.created_at) },
-                    { key: "total", header: "Total", align: "right", aside: true, cell: (b) => <span className="tabular font-medium">{formatINR(b.total)}</span> },
-                    { key: "due", header: "Due", align: "right", className: "tabular", cell: (b) => (b.due_amount > 0 ? formatINR(b.due_amount) : "—") },
-                    { key: "status", header: "Status", aside: true, cell: (b) => <BillStatusBadge status={b.status} /> },
+                    { key: "bill", header: t("Bill"), primary: true, cell: (b) => <Link to={`/bills/${b.id}`} className="font-medium hover:underline">{b.bill_no}</Link> },
+                    { key: "date", header: t("Date"), className: "text-muted-foreground", cell: (b) => formatDateTime(b.completed_at || b.created_at) },
+                    { key: "total", header: t("Total"), align: "right", aside: true, cell: (b) => <span className="tabular font-medium">{formatINR(b.total)}</span> },
+                    { key: "due", header: t("Due"), align: "right", className: "tabular", cell: (b) => (b.due_amount > 0 ? formatINR(b.due_amount) : "—") },
+                    { key: "status", header: t("Status"), aside: true, cell: (b) => <BillStatusBadge status={b.status} /> },
                   ]}
                 />
               </TabsContent>
@@ -319,13 +320,13 @@ export default function CustomerDetailPage() {
                 <ResponsiveTable
                   rows={payments.data || []}
                   inset
-                  empty={<p className="py-8 text-center text-sm text-muted-foreground">No payments yet</p>}
+                  empty={<p className="py-8 text-center text-sm text-muted-foreground">{t("No payments yet")}</p>}
                   columns={[
-                    { key: "date", header: "Date", primary: true, className: "whitespace-nowrap text-muted-foreground", cell: (p) => formatDateTime(p.created_at) },
-                    { key: "mode", header: "Mode", cell: (p) => <ModeBadge mode={p.mode} kind={p.kind} /> },
-                    { key: "amount", header: "Amount", align: "right", aside: true, cell: (p) => <span className="tabular font-medium">{formatINR(p.amount)}</span> },
+                    { key: "date", header: t("Date"), primary: true, className: "whitespace-nowrap text-muted-foreground", cell: (p) => formatDateTime(p.created_at) },
+                    { key: "mode", header: t("Mode"), cell: (p) => <ModeBadge mode={p.mode} kind={p.kind} /> },
+                    { key: "amount", header: t("Amount"), align: "right", aside: true, cell: (p) => <span className="tabular font-medium">{formatINR(p.amount)}</span> },
                     {
-                      key: "utr", header: "UTR / UPI ID", className: "text-xs",
+                      key: "utr", header: t("UTR / UPI ID"), className: "text-xs",
                       cell: (p) => (
                         <span className="text-xs">
                           <span className="font-mono">{p.utr || "—"}</span>
@@ -333,7 +334,7 @@ export default function CustomerDetailPage() {
                         </span>
                       ),
                     },
-                    { key: "status", header: "Status", aside: true, cell: (p) => <MatchBadge status={p.match_status} /> },
+                    { key: "status", header: t("Status"), aside: true, cell: (p) => <MatchBadge status={p.match_status} /> },
                   ]}
                 />
               </TabsContent>
@@ -344,14 +345,14 @@ export default function CustomerDetailPage() {
                       <div key={r.id} className="rounded-md border p-3 text-sm">
                         <div className="mb-1 flex justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
-                            <BellRing className="h-3.5 w-3.5" /> {r.channel === "whatsapp" ? "WhatsApp" : "SMS"} · {formatINR(r.amount_due)}
+                            <BellRing className="h-3.5 w-3.5" /> {r.channel === "whatsapp" ? t("WhatsApp") : t("SMS")} · {formatINR(r.amount_due)}
                           </span>
                           <span>{formatDateTime(r.created_at)}</span>
                         </div>
                         <p className="whitespace-pre-wrap">{r.message}</p>
                       </div>
                     ))}
-                    {reminders.data && !reminders.data.length && <p className="py-8 text-center text-sm text-muted-foreground">No reminders sent yet</p>}
+                    {reminders.data && !reminders.data.length && <p className="py-8 text-center text-sm text-muted-foreground">{t("No reminders sent yet")}</p>}
                   </div>
                 </TabsContent>
               )}
@@ -361,22 +362,24 @@ export default function CustomerDetailPage() {
 
         <Card className="self-start">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Known UPI IDs</CardTitle>
+            <CardTitle className="text-base">{t("Known UPI IDs")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <p className="text-xs text-muted-foreground">Payments from these UPI IDs link to {c.name.split(" ")[0]} automatically, even on walk-in bills.</p>
+            <p className="text-xs text-muted-foreground">
+              {t("Payments from these UPI IDs link to {name} automatically, even on walk-in bills.", { name: c.name.split(" ")[0] })}
+            </p>
             {c.vpas.map((v) => (
               <div key={v.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
                 <span className="font-mono">{v.vpa}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeVpa(v.id)} aria-label={`Remove ${v.vpa}`}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeVpa(v.id)} aria-label={t("Remove {name}", { name: v.vpa })}>
                   <Trash2 />
                 </Button>
               </div>
             ))}
             <form onSubmit={addVpa} className="flex gap-2">
-              <Input value={newVpa} onChange={(e) => setNewVpa(e.target.value)} placeholder="name@bank" className="h-8" />
+              <Input value={newVpa} onChange={(e) => setNewVpa(e.target.value)} placeholder={t("name@bank")} className="h-8" />
               <Button type="submit" size="sm" variant="outline" disabled={!newVpa.includes("@")}>
-                <Plus /> Add
+                <Plus /> {t("Add")}
               </Button>
             </form>
           </CardContent>
@@ -386,31 +389,31 @@ export default function CustomerDetailPage() {
       <AmountDialog
         open={dialog === "pay"}
         onOpenChange={(o) => setDialog(o ? "pay" : null)}
-        title="Receive payment"
-        description="Part, full or advance payment. It settles the oldest open bill first."
+        title={t("Receive payment")}
+        description={t("Part, full or advance payment. It settles the oldest open bill first.")}
         defaultAmount={c.due || ""}
-        submitLabel="Record payment"
+        submitLabel={t("Record payment")}
         onSubmit={async (amount, extra) => {
           await api.post(`/api/customers/${c.id}/payments`, { amount, mode: extra.mode || "cash", utr: extra.utr || null, note: extra.note || null });
-          toast.success(`Received ${formatINR(amount)} from ${c.name}`);
+          toast.success(t("Received {amount} from {name}", { amount: formatINR(amount), name: c.name }));
           reloadAll();
         }}
       >
         {(extra, setExtra) => (
           <>
-            <Field label="Mode">
+            <Field label={t("Mode")}>
               <Select value={extra.mode || "cash"} onValueChange={(v) => setExtra({ ...extra, mode: v })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  {isOwner && <SelectItem value="upi">UPI already received (enter UTR)</SelectItem>}
+                  <SelectItem value="cash">{t("Cash")}</SelectItem>
+                  {isOwner && <SelectItem value="upi">{t("UPI already received (enter UTR)")}</SelectItem>}
                 </SelectContent>
               </Select>
             </Field>
             {extra.mode === "upi" && (
-              <Field label="UTR / transaction ID">
+              <Field label={t("UTR / transaction ID")}>
                 <Input value={extra.utr || ""} onChange={(e) => setExtra({ ...extra, utr: e.target.value })} required minLength={6} />
               </Field>
             )}
@@ -421,10 +424,10 @@ export default function CustomerDetailPage() {
       <AmountDialog
         open={dialog === "qr"}
         onOpenChange={(o) => setDialog(o ? "qr" : null)}
-        title="UPI QR for dues"
-        description="Shows a dynamic QR at the counter for the amount below."
+        title={t("UPI QR for dues")}
+        description={t("Shows a dynamic QR at the counter for the amount below.")}
         defaultAmount={c.due || ""}
-        submitLabel="Show QR"
+        submitLabel={t("Show QR")}
         onSubmit={async (amount) => {
           const r = await api.post(`/api/customers/${c.id}/upi-qr`, { amount });
           setQr(r.data);
@@ -434,10 +437,10 @@ export default function CustomerDetailPage() {
       <AmountDialog
         open={dialog === "link"}
         onOpenChange={(o) => setDialog(o ? "link" : null)}
-        title="UPI payment link"
-        description={`A link ${c.name.split(" ")[0]} can open on their phone to pay remotely.`}
+        title={t("UPI payment link")}
+        description={t("A link {name} can open on their phone to pay remotely.", { name: c.name.split(" ")[0] })}
         defaultAmount={c.due || ""}
-        submitLabel="Create link"
+        submitLabel={t("Create link")}
         onSubmit={async (amount) => {
           const r = await api.post(`/api/customers/${c.id}/payment-link`, { amount });
           setLink(r.data);
@@ -447,18 +450,18 @@ export default function CustomerDetailPage() {
       <AmountDialog
         open={dialog === "writeoff"}
         onOpenChange={(o) => setDialog(o ? "writeoff" : null)}
-        title="Write off dues"
-        description="Use only for amounts that will not be collected. Recorded in the audit log."
+        title={t("Write off dues")}
+        description={t("Use only for amounts that will not be collected. Recorded in the audit log.")}
         defaultAmount={c.due || ""}
-        submitLabel="Write off"
+        submitLabel={t("Write off")}
         onSubmit={async (amount, extra) => {
           await api.post(`/api/customers/${c.id}/writeoff`, { amount, reason: extra.reason || "" });
-          toast.success("Dues written off");
+          toast.success(t("Dues written off"));
           reloadAll();
         }}
       >
         {(extra, setExtra) => (
-          <Field label="Reason">
+          <Field label={t("Reason")}>
             <Input value={extra.reason || ""} onChange={(e) => setExtra({ ...extra, reason: e.target.value })} required minLength={3} />
           </Field>
         )}
@@ -467,7 +470,7 @@ export default function CustomerDetailPage() {
       <Dialog open={Boolean(qr)} onOpenChange={(o) => { if (!o) { setQr(null); reloadAll(); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Pay dues by UPI</DialogTitle>
+            <DialogTitle>{t("Pay dues by UPI")}</DialogTitle>
             <DialogDescription>{c.name}</DialogDescription>
           </DialogHeader>
           {qr && <UpiQrPanel request={qr} allowSimulate={settings?.gateway_is_mock} onPaid={() => reloadAll()} />}
@@ -477,29 +480,31 @@ export default function CustomerDetailPage() {
       <Dialog open={Boolean(link)} onOpenChange={(o) => !o && setLink(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Payment link ready</DialogTitle>
-            <DialogDescription>Valid until {link && formatDateTime(link.expires_at)}. Payment is matched to {c.name} automatically.</DialogDescription>
+            <DialogTitle>{t("Payment link ready")}</DialogTitle>
+            <DialogDescription>
+              {t("Valid until {date}. Payment is matched to {name} automatically.", { date: link ? formatDateTime(link.expires_at) : "", name: c.name })}
+            </DialogDescription>
           </DialogHeader>
           {link && (
             <div className="grid gap-3">
               <div className="flex gap-2">
                 <Input readOnly value={link.url} className="font-mono text-xs" onFocus={(e) => e.target.select()} />
-                <Button variant="outline" size="icon" onClick={() => copy(link.url)} aria-label="Copy link">
+                <Button variant="outline" size="icon" onClick={() => copy(link.url)} aria-label={t("Copy link")}>
                   <Copy />
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={() =>
-                    window.open(`https://wa.me/91${c.mobile}?text=${encodeURIComponent(`Hello ${c.name}, please pay ${formatINR(link.amount)} by UPI: ${link.url}`)}`, "_blank", "noopener")
+                    window.open(`https://wa.me/91${c.mobile}?text=${encodeURIComponent(t("Hello {name}, please pay {amount} by UPI: {url}", { name: c.name, amount: formatINR(link.amount), url: link.url }))}`, "_blank", "noopener")
                   }
                   disabled={!c.whatsapp_consent}
                 >
-                  <Send /> WhatsApp
+                  <Send /> {t("WhatsApp")}
                 </Button>
                 <Button variant="outline" asChild>
                   <a href={link.url} target="_blank" rel="noreferrer">
-                    Open link
+                    {t("Open link")}
                   </a>
                 </Button>
               </div>

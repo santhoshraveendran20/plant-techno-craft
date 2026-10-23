@@ -15,7 +15,7 @@ DEFAULTS: dict[str, str] = {
     "cashier_max_discount_pct": "10",
     "qr_expiry_minutes": "15",
     "payment_link_expiry_days": "7",
-    "receipt_width_mm": "80",
+    "receipt_paper": "80mm",
     "receipt_footer": "Thank you for growing green with us!",
     "reorder_cover_days": "14",
     "near_expiry_days": "30",
@@ -29,14 +29,17 @@ BOOL_KEYS = {"allow_zero_stock_sale"}
 INT_KEYS = {
     "qr_expiry_minutes",
     "payment_link_expiry_days",
-    "receipt_width_mm",
     "reorder_cover_days",
     "near_expiry_days",
 }
 FLOAT_KEYS = {"cashier_max_discount_pct"}
+# Thermal rolls (58 / 80 mm) or sheets for a regular printer
+CHOICE_KEYS = {"receipt_paper": {"58mm", "80mm", "a5", "a4", "a3"}}
 
 
 def _coerce(key: str, raw: str):
+    if key in CHOICE_KEYS:
+        return raw if raw in CHOICE_KEYS[key] else DEFAULTS[key]
     if key in BOOL_KEYS:
         return str(raw).lower() in ("1", "true", "yes", "on")
     if key in INT_KEYS:

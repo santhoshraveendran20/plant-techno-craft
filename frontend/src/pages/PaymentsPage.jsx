@@ -22,19 +22,20 @@ import {
   UpiStatusBadge, useDebounced,
 } from "@/components/common";
 import { ExportButtons } from "@/pages/BillsPage";
+import { t } from "@/i18n";
 
 function PaymentRows({ rows, onLink, isOwner }) {
   const columns = [
-    { key: "time", header: "Time", hide: "xl", card: false, className: "whitespace-nowrap text-muted-foreground", cell: (p) => formatDateTime(p.created_at) },
-    { key: "mode", header: "Mode", cell: (p) => <ModeBadge mode={p.mode} kind={p.kind} /> },
+    { key: "time", header: t("Time"), hide: "xl", card: false, className: "whitespace-nowrap text-muted-foreground", cell: (p) => formatDateTime(p.created_at) },
+    { key: "mode", header: t("Mode"), cell: (p) => <ModeBadge mode={p.mode} kind={p.kind} /> },
     {
-      key: "amount", header: "Amount", align: "right", aside: true,
+      key: "amount", header: t("Amount"), align: "right", aside: true,
       cell: (p) => (
         <span className={`tabular font-semibold ${p.gateway_status === "failed" ? "text-muted-foreground line-through" : ""}`}>{formatINR(p.amount)}</span>
       ),
     },
     {
-      key: "for", header: "Bill / customer", primary: true, className: "text-sm",
+      key: "for", header: t("Bill / customer"), primary: true, className: "text-sm",
       cell: (p) => (
         <>
           {p.bill_no ? (
@@ -42,7 +43,7 @@ function PaymentRows({ rows, onLink, isOwner }) {
               {p.bill_no}
             </Link>
           ) : (
-            <span className="text-muted-foreground">Dues</span>
+            <span className="text-muted-foreground">{t("Dues")}</span>
           )}
           {p.customer_name && (
             <Link to={`/customers/${p.customer_id}`} className="block text-xs text-muted-foreground hover:underline">
@@ -53,9 +54,9 @@ function PaymentRows({ rows, onLink, isOwner }) {
         </>
       ),
     },
-    { key: "utr", header: "UTR", hide: "xl", className: "font-mono text-xs", cell: (p) => <span className="font-mono text-xs">{p.utr || "—"}</span> },
+    { key: "utr", header: t("UTR"), hide: "xl", className: "font-mono text-xs", cell: (p) => <span className="font-mono text-xs">{p.utr || "—"}</span> },
     {
-      key: "payer", header: "Payer UPI ID", hide: "2xl", className: "text-sm",
+      key: "payer", header: t("Payer UPI ID"), hide: "2xl", className: "text-sm",
       cell: (p) => (
         <>
           {p.payer_vpa || "—"}
@@ -64,7 +65,7 @@ function PaymentRows({ rows, onLink, isOwner }) {
       ),
     },
     {
-      key: "status", header: "Status", aside: true,
+      key: "status", header: t("Status"), aside: true,
       cell: (p) => (
         <>
           <MatchBadge status={p.match_status} />
@@ -75,11 +76,11 @@ function PaymentRows({ rows, onLink, isOwner }) {
   ];
   if (onLink) {
     columns.push({
-      key: "actions", header: "Actions", actions: true, align: "right",
+      key: "actions", header: t("Actions"), actions: true, align: "right",
       cell: (p) =>
         isOwner && !p.customer_id && p.gateway_status === "success" && p.kind === "payment" ? (
           <Button size="sm" variant="outline" onClick={() => onLink(p)}>
-            <Link2 /> Link customer
+            <Link2 /> {t("Link customer")}
           </Button>
         ) : null,
     });
@@ -97,8 +98,8 @@ function CollectionsChart({ dateFrom, dateTo }) {
       <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
         <span className="tabular text-lg font-semibold">{formatINR(total)}</span>
         <span className="text-muted-foreground">
-          UPI {formatINR(data.totals.upi)} · Cash {formatINR(data.totals.cash)}
-          {data.totals.refunds > 0 && ` · Refunds ${formatINR(data.totals.refunds)}`}
+          {t("UPI {upi} · Cash {cash}", { upi: formatINR(data.totals.upi), cash: formatINR(data.totals.cash) })}
+          {data.totals.refunds > 0 && ` · ${t("Refunds {amount}", { amount: formatINR(data.totals.refunds) })}`}
         </span>
       </div>
       {total > 0 ? (
@@ -107,12 +108,12 @@ function CollectionsChart({ dateFrom, dateTo }) {
           height={240}
           labels={labels}
           series={[
-            { label: "UPI", data: data.upi },
-            { label: "Cash", data: data.cash },
+            { label: t("UPI"), data: data.upi },
+            { label: t("Cash"), data: data.cash },
           ]}
         />
       ) : (
-        <ChartEmpty height={200}>No money collected in this period</ChartEmpty>
+        <ChartEmpty height={200}>{t("No money collected in this period")}</ChartEmpty>
       )}
     </>
   );
@@ -125,7 +126,7 @@ function LinkCustomerDialog({ payment, onOpenChange, onDone }) {
     setBusy(true);
     try {
       await api.post(`/api/payments/${payment.id}/link-customer`, { customer_id: customer.id, remember_vpa: true });
-      toast.success(`Linked to ${customer.name}`, { description: "It now settles their oldest dues first." });
+      toast.success(t("Linked to {name}", { name: customer.name }), { description: t("It now settles their oldest dues first.") });
       onDone();
       onOpenChange(false);
     } catch (e) {
@@ -138,15 +139,19 @@ function LinkCustomerDialog({ payment, onOpenChange, onDone }) {
     <Dialog open={Boolean(payment)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Link payment to a customer</DialogTitle>
+          <DialogTitle>{t("Link payment to a customer")}</DialogTitle>
           <DialogDescription>
-            {payment && `${formatINR(payment.amount)} from ${payment.payer_vpa || "unknown UPI ID"}. The UPI ID is remembered so future payments link automatically.`}
+            {payment &&
+              t("{amount} from {vpa}. The UPI ID is remembered so future payments link automatically.", {
+                amount: formatINR(payment.amount),
+                vpa: payment.payer_vpa || t("unknown UPI ID"),
+              })}
           </DialogDescription>
         </DialogHeader>
         <CustomerPicker value={customer} onChange={setCustomer} />
         <DialogFooter>
           <Button onClick={submit} disabled={!customer || busy}>
-            Link payment
+            {t("Link payment")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -175,23 +180,23 @@ export default function PaymentsPage() {
   return (
     <div>
       <PageHeader
-        title="Payments"
-        description="Every UPI and cash payment with UTR, payer UPI ID and the bill it settled. Search a UTR to resolve 'I already paid'."
+        title={t("Payments")}
+        description={t("Every UPI and cash payment with UTR, payer UPI ID and the bill it settled. Search a UTR to resolve 'I already paid'.")}
         actions={isOwner && <ExportButtons kind="payments" params={{ date_from: dateFrom, date_to: dateTo }} />}
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="review">Needs review</TabsTrigger>
-          <TabsTrigger value="qr">QR requests</TabsTrigger>
+          <TabsTrigger value="all">{t("All")}</TabsTrigger>
+          <TabsTrigger value="review">{t("Needs review")}</TabsTrigger>
+          <TabsTrigger value="qr">{t("QR requests")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
           {isOwner && (
             <Card className="mb-4">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Money collected per day</CardTitle>
-                <CardDescription>UPI and cash received in the selected dates (dues collections included)</CardDescription>
+                <CardTitle className="text-base">{t("Money collected per day")}</CardTitle>
+                <CardDescription>{t("UPI and cash received in the selected dates (dues collections included)")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <CollectionsChart dateFrom={dateFrom} dateTo={dateTo} />
@@ -202,21 +207,21 @@ export default function PaymentsPage() {
             <div className={FILTER_BAR}>
               <div className={FILTER_SEARCH}>
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="UTR, UPI ID, payer, bill no or customer" className="pl-9" />
+                <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t("UTR, UPI ID, payer, bill no or customer")} className="pl-9" />
               </div>
               <Select value={mode} onValueChange={(v) => { setMode(v); setPage(1); }}>
                 <SelectTrigger className="w-full sm:w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All modes</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="writeoff">Write-off</SelectItem>
+                  <SelectItem value="all">{t("All modes")}</SelectItem>
+                  <SelectItem value="upi">{t("UPI")}</SelectItem>
+                  <SelectItem value="cash">{t("Cash")}</SelectItem>
+                  <SelectItem value="writeoff">{t("Write-off")}</SelectItem>
                 </SelectContent>
               </Select>
-              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="w-full sm:w-[150px]" aria-label="From date" />
-              <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="w-full sm:w-[150px]" aria-label="To date" />
+              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="w-full sm:w-[150px]" aria-label={t("From date")} />
+              <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="w-full sm:w-[150px]" aria-label={t("To date")} />
             </div>
             {all.data && (
               <div className="flex flex-wrap gap-4 border-b px-4 py-2 text-sm">
@@ -236,7 +241,7 @@ export default function PaymentsPage() {
                 <Pagination page={page} pageSize={50} total={all.data.total} onPage={setPage} />
               </>
             ) : (
-              <EmptyState icon={Wallet} title="No payments found" />
+              <EmptyState icon={Wallet} title={t("No payments found")} />
             )}
           </Card>
         </TabsContent>
@@ -245,14 +250,14 @@ export default function PaymentsPage() {
           <Card>
             <CardContent className="p-0">
               <p className="border-b px-4 py-3 text-sm text-muted-foreground">
-                Failed attempts, amount mismatches, overpayments and UPI credits not linked to any customer (last 30 days).
+                {t("Failed attempts, amount mismatches, overpayments and UPI credits not linked to any customer (last 30 days).")}
               </p>
               {review.loading && !review.data ? (
                 <Loading />
               ) : review.data?.length ? (
                 <PaymentRows rows={review.data} onLink={setLinking} isOwner={isOwner} />
               ) : (
-                <EmptyState icon={Wallet} title="Nothing to review" description="Every UPI payment is matched to a bill or customer." />
+                <EmptyState icon={Wallet} title={t("Nothing to review")} description={t("Every UPI payment is matched to a bill or customer.")} />
               )}
             </CardContent>
           </Card>
@@ -265,30 +270,30 @@ export default function PaymentsPage() {
             ) : (
               <ResponsiveTable
                 rows={qrs.data || []}
-                empty={<EmptyState icon={Wallet} title="No QR requests yet" />}
+                empty={<EmptyState icon={Wallet} title={t("No QR requests yet")} />}
                 columns={[
-                  { key: "created", header: "Created", className: "whitespace-nowrap text-muted-foreground", cell: (r) => formatDateTime(r.created_at) },
+                  { key: "created", header: t("Created"), className: "whitespace-nowrap text-muted-foreground", cell: (r) => formatDateTime(r.created_at) },
                   {
-                    key: "ref", header: "Reference", hide: "xl",
+                    key: "ref", header: t("Reference"), hide: "xl",
                     cell: (r) => (
                       <span className="font-mono text-xs">
                         {r.ref}
-                        {r.is_link && <span className="ml-1 rounded bg-muted px-1 font-sans">link</span>}
+                        {r.is_link && <span className="ml-1 rounded bg-muted px-1 font-sans">{t("link")}</span>}
                       </span>
                     ),
                   },
                   {
-                    key: "for", header: "For", primary: true, className: "text-sm",
+                    key: "for", header: t("For"), primary: true, className: "text-sm",
                     cell: (r) => (
                       <>
-                        {r.bill_no ? <Link to={`/bills/${r.bill_id}`} className="font-medium hover:underline">{r.bill_no}</Link> : <span className="font-medium">Dues</span>}
+                        {r.bill_no ? <Link to={`/bills/${r.bill_id}`} className="font-medium hover:underline">{r.bill_no}</Link> : <span className="font-medium">{t("Dues")}</span>}
                         {r.customer_name && <span className="block text-xs text-muted-foreground">{r.customer_name}</span>}
                       </>
                     ),
                   },
-                  { key: "amount", header: "Amount", align: "right", aside: true, cell: (r) => <span className="tabular font-semibold">{formatINR(r.amount)}</span> },
-                  { key: "received", header: "Received", align: "right", className: "tabular", cell: (r) => formatINR(r.received_amount) },
-                  { key: "status", header: "Status", aside: true, cell: (r) => <UpiStatusBadge status={r.status} /> },
+                  { key: "amount", header: t("Amount"), align: "right", aside: true, cell: (r) => <span className="tabular font-semibold">{formatINR(r.amount)}</span> },
+                  { key: "received", header: t("Received"), align: "right", className: "tabular", cell: (r) => formatINR(r.received_amount) },
+                  { key: "status", header: t("Status"), aside: true, cell: (r) => <UpiStatusBadge status={r.status} /> },
                 ]}
               />
             )}

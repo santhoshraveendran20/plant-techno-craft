@@ -6,6 +6,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { EmptyState, Loading } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import LoginPage from "@/pages/LoginPage";
+import { t, useLanguage } from "@/i18n";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const PosPage = lazy(() => import("@/pages/PosPage"));
@@ -48,11 +49,11 @@ function OwnerOnly({ children }) {
     return (
       <EmptyState
         icon={ShieldAlert}
-        title="Owner access only"
-        description="Money totals, analytics and settings are visible to the shop owner."
+        title={t("Owner access only")}
+        description={t("Money totals, analytics and settings are visible to the shop owner.")}
         action={
           <Button asChild variant="outline" className="mt-2">
-            <Link to="/pos">Go to billing</Link>
+            <Link to="/pos">{t("Go to billing")}</Link>
           </Button>
         }
       />
@@ -69,11 +70,11 @@ function Home() {
 function NotFound() {
   return (
     <EmptyState
-      title="Page not found"
-      description="The page you opened does not exist."
+      title={t("Page not found")}
+      description={t("The page you opened does not exist.")}
       action={
         <Button asChild variant="outline" className="mt-2">
-          <Link to="/">Go home</Link>
+          <Link to="/">{t("Go home")}</Link>
         </Button>
       }
     />
@@ -83,6 +84,8 @@ function NotFound() {
 const owner = (el) => <OwnerOnly>{el}</OwnerOnly>;
 
 export default function App() {
+  // Subscribing here re-renders every page when the language changes, so all t() calls pick it up
+  useLanguage();
   return (
     <Suspense fallback={<Loading className="min-h-[50vh]" />}>
       <Routes>

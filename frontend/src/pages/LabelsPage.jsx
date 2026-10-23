@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorAlert, Loading } from "@/components/common";
+import { t } from "@/i18n";
 
 function BarcodeSvg({ value }) {
   const ref = useRef(null);
@@ -55,21 +56,23 @@ export default function LabelsPage() {
       <style>{"@media print { @page { size: A4; margin: 8mm; } }"}</style>
       <div className="no-print mx-auto mb-4 flex max-w-[210mm] flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Barcode labels</h1>
-          <p className="text-sm text-muted-foreground">{labels.length} labels for {withCode.length} products</p>
-          {missing.length > 0 && <p className="text-sm text-amber-700">Skipped (no barcode): {missing.map((p) => p.name).join(", ")}</p>}
+          <h1 className="text-xl font-semibold">{t("Barcode labels")}</h1>
+          <p className="text-sm text-muted-foreground">{t("{labels} labels for {products} products", { labels: labels.length, products: withCode.length })}</p>
+          {missing.length > 0 && (
+            <p className="text-sm text-amber-700 dark:text-amber-400">{t("Skipped (no barcode): {names}", { names: missing.map((p) => p.name).join(", ") })}</p>
+          )}
         </div>
         <div className="flex items-end gap-2">
           <div className="grid gap-1">
-            <Label htmlFor="copies">Copies each</Label>
+            <Label htmlFor="copies">{t("Copies each")}</Label>
             <Input id="copies" type="number" min="1" max="100" value={copies} onChange={(e) => setCopies(Number(e.target.value) || 1)} className="w-24" />
           </div>
           <Button onClick={() => window.print()} disabled={!labels.length}>
-            <Printer /> Print
+            <Printer /> {t("Print")}
           </Button>
         </div>
       </div>
-      <div className="mx-auto grid max-w-[210mm] grid-cols-2 gap-2 bg-white p-2 sm:grid-cols-3 print:max-w-none print:grid-cols-3 print:p-0">
+      <div className="mx-auto grid max-w-[210mm] grid-cols-2 gap-2 bg-white p-2 text-black sm:grid-cols-3 print:max-w-none print:grid-cols-3 print:p-0">
         {labels.map((p) => (
           <div key={p.key} className="flex flex-col items-center justify-center rounded border border-dashed p-2 text-center" style={{ breakInside: "avoid" }}>
             <p className="w-full truncate text-[10px] text-zinc-500">{settings?.shop_name}</p>

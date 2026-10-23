@@ -12,26 +12,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, COLORS, DonutWithLegend, SEQUENTIAL, TrendChart } from "@/components/charts";
+import { BarChart, COLORS, DonutWithLegend, TrendChart } from "@/components/charts";
 import { EmptyState, ErrorAlert, PageHeader, StatCard } from "@/components/common";
+import { t, tx } from "@/i18n";
 
-function Change({ pct, suffix = "vs yesterday" }) {
-  if (pct === null || pct === undefined) return <span className="text-muted-foreground">No sales to compare {suffix.replace("vs ", "with ")}</span>;
+/** % change vs yesterday, or vs the previous period with `vsPrevious`. */
+function Change({ pct, vsPrevious = false }) {
+  if (pct === null || pct === undefined) {
+    return <span className="text-muted-foreground">{vsPrevious ? t("No sales to compare with previous period") : t("No sales to compare with yesterday")}</span>;
+  }
   const up = pct >= 0;
+  const signed = `${up ? "+" : ""}${pct}%`;
   return (
-    <span className={cn("inline-flex items-center gap-1", up ? "text-emerald-600" : "text-red-600")}>
+    <span className={cn("inline-flex items-center gap-1", up ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
       {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-      {up ? "+" : ""}
-      {pct}% {suffix}
+      {vsPrevious ? t("{pct} vs previous period", { pct: signed }) : t("{pct} vs yesterday", { pct: signed })}
     </span>
   );
 }
 
 function modeItems(split) {
   return [
-    { label: "UPI", value: split?.upi || 0, color: COLORS.series1 },
-    { label: "Cash", value: split?.cash || 0, color: COLORS.series2 },
-    { label: "Credit", value: split?.credit || 0, color: COLORS.series3 },
+    { label: t("UPI"), value: split?.upi || 0, color: COLORS.series1 },
+    { label: t("Cash"), value: split?.cash || 0, color: COLORS.series2 },
+    { label: t("Credit"), value: split?.credit || 0, color: COLORS.series3 },
   ];
 }
 
@@ -44,8 +48,9 @@ export default function DashboardPage() {
   const insights = useFetch("/api/dashboard/insights", { days: Number(days) });
 
   const s = summary.data;
-  const t = trend.data;
+  const tr = trend.data;
   const ins = insights.data;
+  const refreshing = summary.loading || trend.loading || insights.loading;
   const refresh = () => {
     summary.reload();
     trend.reload();
@@ -58,11 +63,11 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        description={`Sales, collections and dues · ${formatDate(new Date(), { weekday: "long" })}`}
+        title={t("Dashboard")}
+        description={t("Sales, collections and dues · {date}", { date: formatDate(new Date(), { weekday: "long" }) })}
         actions={
-          <Button variant="outline" size="sm" onClick={refresh}>
-            <RefreshCw /> Refresh
+          <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing}>
+            <RefreshCw className={cn(refreshing && "animate-spin")} /> {refreshing ? t("Refreshing…") : t("Refresh")}
           </Button>
         }
       />
@@ -73,24 +78,24 @@ export default function DashboardPage() {
           Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className={i === 0 ? "col-span-2 h-[110px] rounded-xl sm:col-span-3 xl:col-span-1" : i === 1 ? "h-[110px] rounded-xl sm:col-span-3 xl:col-span-1" : "h-[110px] rounded-xl sm:col-span-2 xl:col-span-1"} />)
         ) : (
           <>
-            <StatCard label="Today's sales" icon={IndianRupee} value={formatINR(s.sales)} hint={<Change pct={s.sales_change_pct} />} className="col-span-2 sm:col-span-3 xl:col-span-1" />
+            <StatCard label={t("Today's sales")} icon={IndianRupee} value={formatINR(s.sales)} hint={<Change pct={s.sales_change_pct} />} className="col-span-2 sm:col-span-3 xl:col-span-1" />
             <StatCard
-              label="Collected today"
+              label={t("Collected today")}
               icon={Banknote}
               className="sm:col-span-3 xl:col-span-1"
               value={formatINR(s.collected)}
-              hint={`UPI ${formatINR(s.collected_upi, { compact: true })} · Cash ${formatINR(s.collected_cash, { compact: true })}`}
+              hint={t("UPI {upi} · Cash {cash}", { upi: formatINR(s.collected_upi, { compact: true }), cash: formatINR(s.collected_cash, { compact: true }) })}
             />
-            <StatCard label="Credit given today" icon={HandCoins} value={formatINR(s.credit_given_today)} hint={`${s.bill_count} bills today`} tone="warn" className="sm:col-span-2 xl:col-span-1" />
+            <StatCard label={t("Credit given today")} icon={HandCoins} value={formatINR(s.credit_given_today)} hint={t("{n} bills today", { n: s.bill_count })} tone="warn" className="sm:col-span-2 xl:col-span-1" />
             <StatCard
-              label="Outstanding dues"
+              label={t("Outstanding dues")}
               icon={Users}
               className="sm:col-span-2 xl:col-span-1"
               value={formatINR(s.outstanding_due)}
-              hint={`${s.customers_with_due} customers owe money`}
+              hint={t("{n} customers owe money", { n: s.customers_with_due })}
               tone={s.outstanding_due > 0 ? "bad" : "good"}
             />
-            <StatCard label="Average bill" icon={ReceiptText} value={formatINR(s.avg_bill_value)} hint={s.pending_upi ? `${s.pending_upi} QR awaiting payment` : "No QR waiting"} className="sm:col-span-2 xl:col-span-1" />
+            <StatCard label={t("Average bill")} icon={ReceiptText} value={formatINR(s.avg_bill_value)} hint={s.pending_upi ? t("{n} QR awaiting payment", { n: s.pending_upi }) : t("No QR waiting")} className="sm:col-span-2 xl:col-span-1" />
           </>
         )}
       </div>
@@ -99,50 +104,50 @@ export default function DashboardPage() {
         <Card className="xl:col-span-2">
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
             <div>
-              <CardTitle>Sales trend</CardTitle>
+              <CardTitle>{t("Sales trend")}</CardTitle>
               <CardDescription className="mt-1.5">
-                {t ? (
+                {tr ? (
                   <>
-                    <span className="tabular font-medium text-foreground">{formatINR(t.totals.current)}</span> this period ·{" "}
-                    <Change pct={t.totals.change_pct} suffix="vs previous period" />
+                    {tx("{amount} this period", { amount: <span className="tabular font-medium text-foreground">{formatINR(tr.totals.current)}</span> })} ·{" "}
+                    <Change pct={tr.totals.change_pct} vsPrevious />
                   </>
                 ) : (
-                  "Loading…"
+                  t("Loading…")
                 )}
               </CardDescription>
             </div>
             <Tabs value={granularity} onValueChange={setGranularity}>
               <TabsList>
-                <TabsTrigger value="day">Daily</TabsTrigger>
-                <TabsTrigger value="week">Weekly</TabsTrigger>
-                <TabsTrigger value="month">Monthly</TabsTrigger>
+                <TabsTrigger value="day">{t("Daily")}</TabsTrigger>
+                <TabsTrigger value="week">{t("Weekly")}</TabsTrigger>
+                <TabsTrigger value="month">{t("Monthly")}</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
           <CardContent>
-            {t ? <TrendChart labels={t.labels} current={t.current} previous={t.previous} previousLabels={t.previous_labels} /> : <Skeleton className="h-[280px]" />}
+            {tr ? <TrendChart labels={tr.labels} current={tr.current} previous={tr.previous} previousLabels={tr.previous_labels} /> : <Skeleton className="h-[280px]" />}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
             <div>
-              <CardTitle>Sales by payment mode</CardTitle>
-              <CardDescription className="mt-1.5">How bills were settled</CardDescription>
+              <CardTitle>{t("Sales by payment mode")}</CardTitle>
+              <CardDescription className="mt-1.5">{t("How bills were settled")}</CardDescription>
             </div>
             <Tabs value={modeTab} onValueChange={setModeTab}>
               <TabsList>
-                <TabsTrigger value="today">Today</TabsTrigger>
-                <TabsTrigger value="period">{days}d</TabsTrigger>
+                <TabsTrigger value="today">{t("Today")}</TabsTrigger>
+                <TabsTrigger value="period">{t("{n}d", { n: days })}</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
           <CardContent>
             {modeTab === "today" && s && (
-              <DonutWithLegend wide className="xl:flex-col xl:gap-5" items={modeItems(s.sales_by_mode)} centerLabel="Today" centerValue={formatINR(s.sales, { compact: true })} />
+              <DonutWithLegend wide className="xl:flex-col xl:gap-5" items={modeItems(s.sales_by_mode)} centerLabel={t("Today")} centerValue={formatINR(s.sales, { compact: true })} />
             )}
             {modeTab === "period" && ins && (
-              <DonutWithLegend wide className="xl:flex-col xl:gap-5" items={modeItems(ins.sales_by_mode)} centerLabel={`${days} days`} centerValue={formatINR(ins.sales, { compact: true })} />
+              <DonutWithLegend wide className="xl:flex-col xl:gap-5" items={modeItems(ins.sales_by_mode)} centerLabel={t("{n} days", { n: days })} centerValue={formatINR(ins.sales, { compact: true })} />
             )}
             {((modeTab === "today" && !s) || (modeTab === "period" && !ins)) && <Skeleton className="h-[200px]" />}
           </CardContent>
@@ -151,9 +156,11 @@ export default function DashboardPage() {
 
       <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Insights</h2>
+          <h2 className="text-lg font-semibold">{t("Insights")}</h2>
           <p className="text-sm text-muted-foreground">
-            {ins ? `${formatINR(ins.sales)} from ${formatNumber(ins.bill_count)} bills · average bill ${formatINR(ins.avg_bill_value)}` : "Loading…"}
+            {ins
+              ? t("{sales} from {n} bills · average bill {avg}", { sales: formatINR(ins.sales), n: formatNumber(ins.bill_count), avg: formatINR(ins.avg_bill_value) })
+              : t("Loading…")}
           </p>
         </div>
         <Select value={days} onValueChange={setDays}>
@@ -161,9 +168,9 @@ export default function DashboardPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
+            <SelectItem value="7">{t("Last 7 days")}</SelectItem>
+            <SelectItem value="30">{t("Last 30 days")}</SelectItem>
+            <SelectItem value="90">{t("Last 90 days")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -171,8 +178,8 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Top products</CardTitle>
-            <CardDescription>By sales value</CardDescription>
+            <CardTitle>{t("Top products")}</CardTitle>
+            <CardDescription>{t("By sales value")}</CardDescription>
           </CardHeader>
           <CardContent>
             {ins ? (
@@ -180,12 +187,12 @@ export default function DashboardPage() {
                 <BarChart
                   horizontal
                   height={300}
-                  label="Sales"
+                  label={t("Sales")}
                   labels={ins.top_products.map((p) => p.name)}
                   data={ins.top_products.map((p) => p.revenue)}
                 />
               ) : (
-                <EmptyState title="No sales in this period" />
+                <EmptyState title={t("No sales in this period")} />
               )
             ) : (
               <Skeleton className="h-[300px]" />
@@ -195,17 +202,17 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top customers</CardTitle>
-            <CardDescription>Regulars by amount spent</CardDescription>
+            <CardTitle>{t("Top customers")}</CardTitle>
+            <CardDescription>{t("Regulars by amount spent")}</CardDescription>
           </CardHeader>
           <CardContent className="px-0 pb-2">
             {ins ? (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="pl-5">Customer</TableHead>
-                    <TableHead className="text-right">Bills</TableHead>
-                    <TableHead className="pr-5 text-right">Spent</TableHead>
+                    <TableHead className="pl-5">{t("Customer")}</TableHead>
+                    <TableHead className="text-right">{t("Bills")}</TableHead>
+                    <TableHead className="pr-5 text-right">{t("Spent")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -224,7 +231,7 @@ export default function DashboardPage() {
                   {!ins.top_customers.length && (
                     <TableRow>
                       <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                        No customer bills in this period
+                        {t("No customer bills in this period")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -238,14 +245,14 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Peak hours</CardTitle>
-            <CardDescription>Number of bills by hour of day</CardDescription>
+            <CardTitle>{t("Peak hours")}</CardTitle>
+            <CardDescription>{t("Number of bills by hour of day")}</CardDescription>
           </CardHeader>
           <CardContent>
             {hours ? (
               <BarChart
                 height={240}
-                label="Bills"
+                label={t("Bills")}
                 labels={hourIdx.map((i) => hours.labels[i])}
                 data={hourIdx.map((i) => hours.bills[i])}
                 valueFormatter={(v) => v}
@@ -260,11 +267,11 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-start justify-between space-y-0">
             <div>
-              <CardTitle>Dues ageing</CardTitle>
-              <CardDescription className="mt-1.5">Unpaid bill amounts by age</CardDescription>
+              <CardTitle>{t("Dues ageing")}</CardTitle>
+              <CardDescription className="mt-1.5">{t("Unpaid bill amounts by age")}</CardDescription>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/dues">Collect dues</Link>
+              <Link to="/dues">{t("Collect dues")}</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -272,17 +279,17 @@ export default function DashboardPage() {
               <>
                 <BarChart
                   height={190}
-                  label="Due"
-                  labels={ins.dues_ageing.labels.map((l) => `${l} days`)}
+                  label={t("Due")}
+                  labels={ins.dues_ageing.labels.map((l) => t("{n} days", { n: l }))}
                   data={ins.dues_ageing.amounts}
-                  colors={SEQUENTIAL}
+                  sequential
                 />
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                   {ins.dues_ageing.labels.map((l, i) => (
                     <div key={l} className="rounded-md bg-muted/60 px-2 py-1.5">
-                      <p className="text-muted-foreground">{l} days</p>
+                      <p className="text-muted-foreground">{t("{n} days", { n: l })}</p>
                       <p className="tabular text-sm font-semibold">{formatINR(ins.dues_ageing.amounts[i])}</p>
-                      <p className="text-muted-foreground">{ins.dues_ageing.counts[i]} bills</p>
+                      <p className="text-muted-foreground">{t("{n} bills", { n: ins.dues_ageing.counts[i] })}</p>
                     </div>
                   ))}
                 </div>
@@ -297,12 +304,12 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-start justify-between space-y-0">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <PackageX className="h-4 w-4 text-red-600" /> Low & out of stock
+                <PackageX className="h-4 w-4 text-red-600 dark:text-red-400" /> {t("Low & out of stock")}
               </CardTitle>
-              <CardDescription className="mt-1.5">At or below the reorder level</CardDescription>
+              <CardDescription className="mt-1.5">{t("At or below the reorder level")}</CardDescription>
             </div>
             <Button asChild variant="outline" size="sm">
-              <Link to="/reports?tab=reorder">Reorder list</Link>
+              <Link to="/reports?tab=reorder">{t("Reorder list")}</Link>
             </Button>
           </CardHeader>
           <CardContent className="px-0 pb-2">
@@ -321,14 +328,14 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell className="pr-5 text-right">
                         <Badge variant={p.status === "out" ? "destructive" : "warning"}>
-                          <AlertTriangle className="h-3 w-3" /> {p.status === "out" ? "Out of stock" : "Low"}
+                          <AlertTriangle className="h-3 w-3" /> {p.status === "out" ? t("Out of stock") : t("Low")}
                         </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
                   {!ins.low_stock.length && (
                     <TableRow>
-                      <TableCell className="py-8 text-center text-muted-foreground">Stock levels are healthy</TableCell>
+                      <TableCell className="py-8 text-center text-muted-foreground">{t("Stock levels are healthy")}</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -339,8 +346,8 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Slow-moving stock</CardTitle>
-            <CardDescription>In stock but not sold in 30+ days</CardDescription>
+            <CardTitle>{t("Slow-moving stock")}</CardTitle>
+            <CardDescription>{t("In stock but not sold in 30+ days")}</CardDescription>
           </CardHeader>
           <CardContent className="px-0 pb-2">
             {ins && (
@@ -350,14 +357,14 @@ export default function DashboardPage() {
                     <TableRow key={p.id}>
                       <TableCell className="pl-5 font-medium">{p.name}</TableCell>
                       <TableCell className="text-right text-sm text-muted-foreground">
-                        {p.days_since_sale === null ? "Never sold" : `${p.days_since_sale} days since sale`}
+                        {p.days_since_sale === null ? t("Never sold") : t("{n} days since sale", { n: p.days_since_sale })}
                       </TableCell>
                       <TableCell className="tabular pr-5 text-right">{formatINR(p.stock_value)}</TableCell>
                     </TableRow>
                   ))}
                   {!ins.slow_moving.length && (
                     <TableRow>
-                      <TableCell className="py-8 text-center text-muted-foreground">Everything in stock sold in the last 30 days</TableCell>
+                      <TableCell className="py-8 text-center text-muted-foreground">{t("Everything in stock sold in the last 30 days")}</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

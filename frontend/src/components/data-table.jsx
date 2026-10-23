@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { useIsTabletUp } from "@/hooks/useMediaQuery";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { t } from "@/i18n";
 
 const HIDE = {
   sm: "hidden sm:table-cell",
@@ -109,7 +110,7 @@ export function ResponsiveTable({
         <TableRow>
           {columns.map((c, i) => (
             <TableHead key={c.key} className={cellClass(c, i)}>
-              {c.actions ? <span className="sr-only">{c.header || "Actions"}</span> : c.header}
+              {c.actions ? <span className="sr-only">{c.header || t("Actions")}</span> : c.header}
             </TableHead>
           ))}
         </TableRow>

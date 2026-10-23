@@ -5,6 +5,7 @@ import { playBeep, playSuccess } from "@/lib/sound";
 import { formatINR } from "@/lib/utils";
 import { UpiQr, formatCountdown } from "@/components/UpiQrPanel";
 import { BRAND, BrandMark } from "@/components/brand";
+import { t } from "@/i18n";
 
 /** Second screen facing the customer (FR-10): shows the live QR and a big confirmation when paid. */
 export default function CustomerDisplayPage() {
@@ -54,12 +55,12 @@ export default function CustomerDisplayPage() {
           }}
           className="fixed right-4 top-4 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/20"
         >
-          <Volume2 className="h-4 w-4" /> Tap to enable sound
+          <Volume2 className="h-4 w-4" /> {t("Tap to enable sound")}
         </button>
       )}
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="rounded-2xl bg-brand-paper p-2 shadow-lg">
-          <BrandMark className="h-16 w-16" />
+          <BrandMark plate={false} className="h-16 w-16" />
         </span>
         <div>
           <p className="text-2xl font-semibold">{state.shop_name || BRAND.name}</p>
@@ -68,30 +69,34 @@ export default function CustomerDisplayPage() {
       </div>
       {!req && (
         <div className="text-center text-white/70">
-          <p className="text-3xl font-medium text-white">Welcome!</p>
-          <p className="mt-2">Your payment QR will appear here.</p>
+          <p className="text-3xl font-medium text-white">{t("Welcome!")}</p>
+          <p className="mt-2">{t("Your payment QR will appear here.")}</p>
         </div>
       )}
       {req && req.status === "paid" && (
         <div className="flex flex-col items-center gap-4 text-center">
           <CheckCircle2 className="h-32 w-32 animate-pop-in text-lime-400" />
-          <p className="text-4xl font-semibold">Payment received</p>
+          <p className="text-4xl font-semibold">{t("Payment received")}</p>
           <p className="tabular text-2xl text-white/85">{formatINR(req.received_amount)}</p>
-          <p className="text-white/70">Thank you{req.customer_name ? `, ${req.customer_name.split(" ")[0]}` : ""}!</p>
+          <p className="text-white/70">
+            {req.customer_name ? t("Thank you, {name}!", { name: req.customer_name.split(" ")[0] }) : t("Thank you!")}
+          </p>
         </div>
       )}
       {req && req.status !== "paid" && (
         <div className="flex flex-col items-center gap-5 text-center">
-          <p className="text-white/70">{req.bill_no ? `Bill ${req.bill_no}` : "Due payment"}</p>
+          <p className="text-white/70">{req.bill_no ? t("Bill {bill}", { bill: req.bill_no }) : t("Due payment")}</p>
           <p className="tabular text-6xl font-semibold tracking-tight">{formatINR(req.amount - req.received_amount)}</p>
           <UpiQr request={req} size={300} className="p-4" />
-          <p className="text-lg">Scan with any UPI app — GPay, PhonePe, Paytm, BHIM</p>
+          <p className="text-lg">{t("Scan with any UPI app — GPay, PhonePe, Paytm, BHIM")}</p>
           <p className="flex items-center gap-2 text-white/70">
-            <Clock className="h-4 w-4" /> QR valid for <span className="tabular text-white">{formatCountdown(left)}</span>
+            <Clock className="h-4 w-4" /> {t("QR valid for")} <span className="tabular text-white">{formatCountdown(left)}</span>
           </p>
-          {req.status === "failed" && <p className="rounded-md bg-red-500/20 px-4 py-2 text-red-200">Payment failed — please try again</p>}
+          {req.status === "failed" && <p className="rounded-md bg-red-500/20 px-4 py-2 text-red-200">{t("Payment failed — please try again")}</p>}
           {req.status === "partially_paid" && (
-            <p className="rounded-md bg-amber-500/20 px-4 py-2 text-amber-200">Received {formatINR(req.received_amount)} — please pay the balance</p>
+            <p className="rounded-md bg-amber-500/20 px-4 py-2 text-amber-200">
+              {t("Received {amount} — please pay the balance", { amount: formatINR(req.received_amount) })}
+            </p>
           )}
         </div>
       )}

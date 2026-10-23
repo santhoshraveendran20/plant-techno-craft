@@ -11,6 +11,7 @@ import { BarChart, COLORS, LineChart, countTick } from "@/components/charts";
 import { ResponsiveTable } from "@/components/data-table";
 import { ErrorAlert, Loading, StatCard } from "@/components/common";
 import { ProductFormDialog, StockBadge } from "@/pages/ProductsPage";
+import { t } from "@/i18n";
 
 const TYPE_LABEL = {
   opening: "Opening stock", purchase: "Stock-in", sale: "Sale", return: "Sales return", adjustment: "Adjustment", count: "Stock count",
@@ -49,8 +50,10 @@ function StockCharts({ movements, unit, reorderLevel }) {
     <div className="mt-4 grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Stock level</CardTitle>
-          <CardDescription>Balance after each of the last {movements.length} movements · reorder level {formatNumber(reorderLevel)} {unit}</CardDescription>
+          <CardTitle className="text-base">{t("Stock level")}</CardTitle>
+          <CardDescription>
+            {t("Balance after each of the last {n} movements · reorder level {level} {unit}", { n: movements.length, level: formatNumber(reorderLevel), unit })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <LineChart
@@ -61,21 +64,21 @@ function StockCharts({ movements, unit, reorderLevel }) {
             valueFormatter={countTick}
             tooltipFormatter={(v) => `${formatNumber(v)} ${unit}`}
             series={[
-              { label: "In stock", data: chronological.map((m) => m.balance_after) },
-              { label: "Reorder level", data: chronological.map(() => reorderLevel), color: COLORS.muted },
+              { label: t("In stock"), data: chronological.map((m) => m.balance_after) },
+              { label: t("Reorder level"), data: chronological.map(() => reorderLevel), color: COLORS.muted },
             ]}
           />
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Units sold per week</CardTitle>
-          <CardDescription>Last 8 weeks (week starting Monday)</CardDescription>
+          <CardTitle className="text-base">{t("Units sold per week")}</CardTitle>
+          <CardDescription>{t("Last 8 weeks (week starting Monday)")}</CardDescription>
         </CardHeader>
         <CardContent>
           <BarChart
             height={220}
-            label="Sold"
+            label={t("Sold")}
             labels={weeks.map((w) => formatDate(w, { year: undefined }))}
             data={sold}
             valueFormatter={countTick}
@@ -106,41 +109,41 @@ export default function ProductDetailPage() {
       <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <Button variant="ghost" size="sm" className="-ml-3 mb-1" onClick={() => navigate(-1)}>
-            <ArrowLeft /> Back
+            <ArrowLeft /> {t("Back")}
           </Button>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{p.name}</h1>
             <StockBadge status={p.stock_status} />
-            {!p.is_active && <Badge variant="secondary">Inactive</Badge>}
+            {!p.is_active && <Badge variant="secondary">{t("Inactive")}</Badge>}
           </div>
-          <p className="mt-1 font-mono text-sm text-muted-foreground">{p.barcode || "No barcode"} · {p.category || "Uncategorised"}</p>
+          <p className="mt-1 font-mono text-sm text-muted-foreground">{p.barcode || t("No barcode")} · {p.category || t("Uncategorised")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {p.barcode && (
             <Button variant="outline" asChild>
               <a href={`/labels?ids=${p.id}&copies=12`} target="_blank" rel="noreferrer">
-                <Printer /> Print labels
+                <Printer /> {t("Print labels")}
               </a>
             </Button>
           )}
           <Button variant="outline" asChild>
             <Link to={`/stock/adjustments?product=${p.id}`}>
-              <SlidersHorizontal /> Adjust stock
+              <SlidersHorizontal /> {t("Adjust stock")}
             </Link>
           </Button>
           {isOwner && (
             <Button onClick={() => setEditing(true)}>
-              <Pencil /> Edit
+              <Pencil /> {t("Edit")}
             </Button>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="In stock" value={`${formatNumber(p.stock_qty)} ${p.unit}`} hint={`Reorder at ${formatNumber(p.reorder_level)}`} tone={p.stock_status === "ok" ? "good" : "bad"} />
-        <StatCard label="Selling price" value={formatINR(p.selling_price)} />
-        {isOwner && <StatCard label="Cost price" value={formatINR(p.cost_price)} hint={p.selling_price ? `Margin ${(((p.selling_price - p.cost_price) / p.selling_price) * 100).toFixed(1)}%` : undefined} />}
-        {isOwner && <StatCard label="Stock value (cost)" value={formatINR(Math.max(0, p.stock_qty) * p.cost_price)} />}
+        <StatCard label={t("In stock")} value={`${formatNumber(p.stock_qty)} ${p.unit}`} hint={t("Reorder at {level}", { level: formatNumber(p.reorder_level) })} tone={p.stock_status === "ok" ? "good" : "bad"} />
+        <StatCard label={t("Selling price")} value={formatINR(p.selling_price)} />
+        {isOwner && <StatCard label={t("Cost price")} value={formatINR(p.cost_price)} hint={p.selling_price ? t("Margin {pct}%", { pct: (((p.selling_price - p.cost_price) / p.selling_price) * 100).toFixed(1) }) : undefined} />}
+        {isOwner && <StatCard label={t("Stock value (cost)")} value={formatINR(Math.max(0, p.stock_qty) * p.cost_price)} />}
       </div>
 
       {moves.data && moves.data.length > 0 && <StockCharts movements={moves.data} unit={p.unit} reorderLevel={p.reorder_level} />}
@@ -148,36 +151,36 @@ export default function ProductDetailPage() {
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Stock movement history</CardTitle>
+            <CardTitle className="text-base">{t("Stock movement history")}</CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <ResponsiveTable
               rows={moves.data || []}
               inset
-              empty={<p className="py-8 text-center text-sm text-muted-foreground">No stock movements yet</p>}
+              empty={<p className="py-8 text-center text-sm text-muted-foreground">{t("No stock movements yet")}</p>}
               columns={[
-                { key: "date", header: "Date", className: "whitespace-nowrap text-muted-foreground", cell: (m) => formatDateTime(m.created_at) },
+                { key: "date", header: t("Date"), className: "whitespace-nowrap text-muted-foreground", cell: (m) => formatDateTime(m.created_at) },
                 {
-                  key: "type", header: "Type", primary: true,
+                  key: "type", header: t("Type"), primary: true,
                   cell: (m) => (
                     <>
-                      <span className="font-medium md:font-normal">{TYPE_LABEL[m.movement_type] || m.movement_type}</span>
+                      <span className="font-medium md:font-normal">{t(TYPE_LABEL[m.movement_type] || m.movement_type)}</span>
                       {m.reason && <span className="block text-xs text-muted-foreground">{m.reason}</span>}
                     </>
                   ),
                 },
                 {
-                  key: "change", header: "In / out", align: "right", aside: true,
+                  key: "change", header: t("In / out"), align: "right", aside: true,
                   cell: (m) =>
                     m.qty_in ? (
-                      <span className="tabular font-semibold text-emerald-700">+{formatNumber(m.qty_in)}</span>
+                      <span className="tabular font-semibold text-emerald-700 dark:text-emerald-400">+{formatNumber(m.qty_in)}</span>
                     ) : (
-                      <span className="tabular font-semibold text-red-700">−{formatNumber(m.qty_out)}</span>
+                      <span className="tabular font-semibold text-red-700 dark:text-red-400">−{formatNumber(m.qty_out)}</span>
                     ),
                 },
-                { key: "balance", header: "Balance", align: "right", className: "tabular font-medium", cell: (m) => formatNumber(m.balance_after) },
+                { key: "balance", header: t("Balance"), align: "right", className: "tabular font-medium", cell: (m) => formatNumber(m.balance_after) },
                 {
-                  key: "ref", header: "Reference", className: "text-sm",
+                  key: "ref", header: t("Reference"), className: "text-sm",
                   cell: (m) => (
                     <>
                       <MovementLink m={m} />
@@ -191,20 +194,20 @@ export default function ProductDetailPage() {
         </Card>
         <Card className="self-start">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Batches & expiry</CardTitle>
+            <CardTitle className="text-base">{t("Batches & expiry")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2 text-sm">
-            {p.batches.length === 0 && <p className="text-muted-foreground">{p.track_expiry ? "No batches with expiry recorded yet." : "Expiry tracking is off for this product."}</p>}
+            {p.batches.length === 0 && <p className="text-muted-foreground">{p.track_expiry ? t("No batches with expiry recorded yet.") : t("Expiry tracking is off for this product.")}</p>}
             {p.batches.map((b, i) => {
               const days = Math.round((new Date(`${b.expiry_date}T00:00:00`) - new Date(new Date().toDateString())) / 86400000);
               return (
                 <div key={`${b.batch_no}-${i}`} className="flex items-center justify-between rounded-md border px-3 py-2">
                   <span>
                     <span className="font-mono">{b.batch_no || "—"}</span>
-                    <span className="block text-xs text-muted-foreground">Qty {formatNumber(b.qty)}</span>
+                    <span className="block text-xs text-muted-foreground">{t("Qty {n}", { n: formatNumber(b.qty) })}</span>
                   </span>
                   <Badge variant={days < 0 ? "destructive" : days <= 30 ? "warning" : "secondary"}>
-                    {days < 0 ? "Expired" : "Expires"} {formatDate(b.expiry_date)}
+                    {days < 0 ? t("Expired {date}", { date: formatDate(b.expiry_date) }) : t("Expires {date}", { date: formatDate(b.expiry_date) })}
                   </Badge>
                 </div>
               );
