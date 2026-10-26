@@ -1,6 +1,14 @@
 import logging
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
+
+# Allow running directly from within the `app` directory (e.g. `uvicorn main:app`)
+if not __package__:
+    parent_dir = str(Path(__file__).resolve().parent.parent)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    __package__ = "app"
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

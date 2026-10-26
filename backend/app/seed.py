@@ -12,6 +12,15 @@ import random
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
+import sys
+from pathlib import Path
+
+if not __package__:
+    parent_dir = str(Path(__file__).resolve().parent.parent)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    __package__ = "app"
+
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
